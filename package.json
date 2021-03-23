@@ -24,6 +24,9 @@
     "url": "https://github.com/redexp/adv-parser/issues"
   },
   "homepage": "https://github.com/redexp/adv-parser#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@babel/generator": "^7.13.9",
     "@babel/parser": "^7.13.12",
