@@ -1,4 +1,4 @@
-# @adv/parser
+# adv-parser
 
 [![Build Status](https://travis-ci.com/redexp/adv-parser.svg?branch=master)](https://travis-ci.com/redexp/adv-parser)
 
@@ -84,7 +84,7 @@ schema = {
 ## Usage
 
 ```js
-const parser = require('@adv/parser');
+const parser = require('adv-parser');
 
 const schema = parser(`{id: number}`);
 
@@ -101,8 +101,8 @@ schema == {
 ### Schemas cache
 
 ```js
-const parser = require('@adv/parser');
-const defaultSchemas = require('@adv/parser/schemas');
+const parser = require('adv-parser');
+const defaultSchemas = require('adv-parser/schemas');
 
 const schemas = {
 	...defaultSchemas
@@ -123,8 +123,8 @@ It gives you ability to create your own meta programming language
 More about default methods see [Schema methods](#schema-methods) and [Schema options as methods](#schema-options-as-methods)
 
 ```js
-const parser = require('@adv/parser');
-const defaultMethods = require('@adv/parser/methods');
+const parser = require('adv-parser');
+const defaultMethods = require('adv-parser/methods');
 const {set} = defaultMethods;
 
 const schema = parser(`number.test(true)`, {
@@ -148,9 +148,9 @@ schema == {
 More about default object inline options see [Object schema inline options](#object-schema-inline-options)
 
 ```js
-const parser = require('@adv/parser');
-const defaultObjectOptions = require('@adv/parser/methods/object');
-const set = require('@adv/parser/methods/set');
+const parser = require('adv-parser');
+const defaultObjectOptions = require('adv-parser/methods/object');
+const set = require('adv-parser/methods/set');
 
 const schema = parser(`{id: number, $test: true}`, {
 	objectOptions: {

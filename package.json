@@ -1,5 +1,5 @@
 {
-  "name": "@adv/parser",
+  "name": "adv-parser",
   "version": "1.0.0",
   "description": "ADV parser",
   "main": "index.js",
