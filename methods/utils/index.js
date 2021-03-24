@@ -12,6 +12,7 @@ module.exports = {
 	argType,
 	firstType,
 	firstObject,
+	firstArray,
 	firstString,
 	firstNumber,
 	firstBoolean,
@@ -59,34 +60,52 @@ function isArray(schema) {
 }
 
 function argType(num, value, type) {
-	if (type === 'object') {
+	switch (type) {
+	case 'object':
 		if (!t.isObjectExpression(value)) {
 			throw new Error(`Method "${curMethodName}" required ${num} argument to be an object`);
 		}
-	}
-	else if (type === 'string') {
+		break;
+
+	case 'array':
+		if (!t.isArrayExpression(value)) {
+			throw new Error(`Method "${curMethodName}" required ${num} argument to be an array`);
+		}
+		break;
+
+	case 'number':
+		if (!t.isNumericLiteral(value)) {
+			throw new Error(`Method "${curMethodName}" required ${num} argument to be a number`);
+		}
+		break;
+
+	case 'string':
 		if (!t.isStringLiteral(value)) {
 			throw new Error(`Method "${curMethodName}" required ${num} argument to be a string`);
 		}
-	}
-	else if (type === 'number') {
-		if (!t.isNumberLiteral(value)) {
-			throw new Error(`Method "${curMethodName}" required ${num} argument to be a number`);
-		}
-	}
-	else if (type === 'boolean') {
+		break;
+
+	case 'boolean':
 		if (!t.isBooleanLiteral(value)) {
 			throw new Error(`Method "${curMethodName}" required ${num} argument to be a boolean`);
 		}
+		break;
+
+	default:
+		throw new Error(`Unknown argument type: ${JSON.stringify(type)}`);
 	}
 }
 
 function firstType(value, type) {
-	return argType(value, type);
+	return argType('first', value, type);
 }
 
 function firstObject(value) {
 	return firstType(value, 'object');
+}
+
+function firstArray(value) {
+	return firstType(value, 'array');
 }
 
 function firstString(value) {
