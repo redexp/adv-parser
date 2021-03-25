@@ -89,11 +89,11 @@ const parser = require('adv-parser');
 const schema = parser(`{id: number}`);
 
 schema == {
-	type: 'object',
+    type: 'object',
     additionalProperties: false,
     required: ['id'],
     properties: {
-		id: {type: 'number'}
+        id: {type: 'number'}
     }
 };
 ```
@@ -105,7 +105,7 @@ const parser = require('adv-parser');
 const defaultSchemas = require('adv-parser/schemas');
 
 const schemas = {
-	...defaultSchemas
+    ...defaultSchemas
 };
 
 const schema1 = parser(`User = {id: number}`, {schemas});
@@ -128,17 +128,17 @@ const defaultMethods = require('adv-parser/methods');
 const {set} = defaultMethods;
 
 const schema = parser(`number.test(true)`, {
-	methods: {
-		...defaultMethods,
+    methods: {
+        ...defaultMethods,
         
         test: function (schema, args, params) {
-        	return set(schema, ['test', args[0]], params);
+            return set(schema, ['test', args[0]], params);
         }
     }
 });
 
 schema == {
-	type: 'number',
+    type: 'number',
     test: true,
 };
 ```
@@ -153,22 +153,22 @@ const defaultObjectOptions = require('adv-parser/methods/object');
 const set = require('adv-parser/methods/set');
 
 const schema = parser(`{id: number, $test: true}`, {
-	objectOptions: {
-		...defaultObjectOptions,
+    objectOptions: {
+        ...defaultObjectOptions,
         
         test: function (schema, args, params) {
-        	return set(schema, ['test', args[0]], params);
+            return set(schema, ['test', args[0]], params);
         }
     }
 });
 
 schema == {
-	type: 'object',
+    type: 'object',
     test: true,
     additionalProperties: false,
     required: ['id'],
     properties: {
-		id: {type: 'number'}
+        id: {type: 'number'}
     }
 };
 ```
@@ -421,16 +421,16 @@ schema == {
   additionalProperties: false,
   required: ['action', 'user'],
   properties: {
-  	action: {
-  	  type: 'string',
-  	  enum: ['update', 'delete']
+    action: {
+      type: 'string',
+      enum: ['update', 'delete']
     },
     user: {
       type: 'object',
       additionalProperties: false,
       required: ['id', 'name'],
       properties: {
-      	id: {type: 'number'},
+        id: {type: 'number'},
         name: {type: 'string'},
       }
     }
@@ -665,13 +665,13 @@ Set schema option like `additionalProperties` or `minLength`
 schema = User.set('additionalProperties', true)
 
 schema == {
-	type: "object",
-	additionalProperties: true,
-	required: ['id'],
-	properties: {
-		id: {type: "number"},
-		name: {type: "string"},
-	},
+    type: "object",
+    additionalProperties: true,
+    required: ['id'],
+    properties: {
+        id: {type: "number"},
+        name: {type: "string"},
+    },
 }
 
 schema = {search: string.set('minLength', 3)}
@@ -718,12 +718,12 @@ schema = {
 }
 
 schema == {
-	type: 'object',
-	additionalProperties: true,
-	maxProperties: 10,
+    type: 'object',
+    additionalProperties: true,
+    maxProperties: 10,
     required: ['id'],
     properties: {
-		id: {type: 'number'}
+        id: {type: 'number'}
     }
 }
 ```

@@ -1,6 +1,6 @@
 {
   "name": "adv-parser",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ADV parser",
   "main": "index.js",
   "directories": {

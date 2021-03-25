@@ -60,6 +60,11 @@ function isArray(schema) {
 }
 
 function argType(num, value, type) {
+	if (Array.isArray(type)) {
+		type.forEach(type => argType(num, value, type));
+		return;
+	}
+
 	switch (type) {
 	case 'object':
 		if (!t.isObjectExpression(value)) {
