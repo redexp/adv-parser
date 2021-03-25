@@ -1466,4 +1466,27 @@ describe('methods', function () {
 			}
 		});
 	});
+
+	it('function', function () {
+		const t = require('@babel/types');
+
+		var schema = p(`{
+			id: test(1, "2")
+		}`, {
+			functions: {
+				test: function (args) {
+					return t.stringLiteral('test=' + args.map(n => n.value).join('-'));
+				}
+			}
+		});
+
+		expect(schema).to.eql({
+			type: 'object',
+			additionalProperties: false,
+			required: ['id'],
+			properties: {
+				id: "test=1-2"
+			}
+		});
+	});
 });

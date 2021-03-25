@@ -28,15 +28,18 @@ module.exports.astToAjvSchema = astToAjvSchema;
 
 var schemas = {};
 var methods = {};
+var functions = {};
 var objectOptions = {};
 
 function parseSchema(code, {
 	schemas: s = {...defaultSchemas},
 	methods: m = defaultMethods,
+	functions: f,
 	objectOptions: o = defaultObjectMethods
 }) {
 	schemas = s;
 	methods = m;
+	functions = f;
 	objectOptions = o;
 
 	var schema = astToAjvSchema(toAst(code));
@@ -372,6 +375,16 @@ function astRegexToAjvSchema(root) {
 }
 
 function astCallExpToAjvSchema(root) {
+	if (t.isIdentifier(root.callee)) {
+		let func = functions && functions[root.callee.name];
+
+		if (!func) {
+			throw new Error(`Unknown function: ${root.callee.name}`);
+		}
+
+		return func(root.arguments);
+	}
+
 	if (!t.isMemberExpression(root.callee)) {
 		throw new Error(`Invalid call expression: ${root.callee.type}`);
 	}

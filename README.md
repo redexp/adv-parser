@@ -59,6 +59,7 @@ schema = {
 * [Usage](#usage)
   * [Schemas cache](#schemas-cache)
   * [Custom methods](#custom-methods)
+  * [Custom functions](#custom-functions)
   * [Custom object inline options](#custom-object-inline-options)
 * [Optional object fields](#optional-object-fields)
 * [Array syntax](#array-syntax)
@@ -140,6 +141,35 @@ const schema = parser(`number.test(true)`, {
 schema == {
     type: 'number',
     test: true,
+};
+```
+
+### Custom functions
+
+You can define custom functions like
+
+```js
+const parser = require('adv-parser');
+const t = require('@babel/types');
+
+const schema = parser(`{id: test(1, 2)}`, {
+    functions: {
+        test: function (args) {
+            return t.numericLiteral(
+                args.reduce((sum, item) => sum + item.value, 0)
+            );
+        }
+    }
+});
+
+schema == {
+    type: 'object',
+    test: true,
+    additionalProperties: false,
+    required: ['id'],
+    properties: {
+        id: 3
+    }
 };
 ```
 
