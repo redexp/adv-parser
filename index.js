@@ -10,13 +10,13 @@ const defaultObjectMethods = require('./methods/object');
 
 const defaultSchemasNames = Object.keys(defaultSchemas);
 
-const astObject = toAst(JSON.stringify(require('./schemas/object')));
-const astArray = toAst(JSON.stringify(require('./schemas/array')));
-const astRegexp = toAst(JSON.stringify(require('./schemas/regexp')));
-const astEnum = toAst(JSON.stringify(require('./schemas/enum')));
-const astAnyOf = toAst(JSON.stringify(require('./schemas/anyOf')));
-const astAllOf = toAst(JSON.stringify(require('./schemas/allOf')));
-const astConst = toAst(JSON.stringify(require('./schemas/const')));
+const astObject = toAst(require('./schemas/object'));
+const astArray = toAst(require('./schemas/array'));
+const astRegexp = toAst(require('./schemas/regexp'));
+const astEnum = toAst(require('./schemas/enum'));
+const astAnyOf = toAst(require('./schemas/anyOf'));
+const astAllOf = toAst(require('./schemas/allOf'));
+const astConst = toAst(require('./schemas/const'));
 
 const optionalPropName = /\?$/;
 const methodPropName = /^\$/;
@@ -31,27 +31,25 @@ var methods = {};
 var functions = {};
 var objectOptions = {};
 
-function parseSchema(code, {
+/**
+ * @param {string} code
+ * @param {{schemas?: Object, methods?: Object<string, function>, functions?: Object<string, function>, objectOptions?: Object<string, function>}} params
+ * @returns {Object}
+ */
+function parseSchema(code, params) {
+	return generateAjvSchema(toAst(code), params);
+}
+
+function generateAjvSchema(ast, {
 	schemas: s = {...defaultSchemas},
 	methods: m = defaultMethods,
 	functions: f,
-	objectOptions: o = defaultObjectMethods
-}) {
+	objectOptions: o = defaultObjectMethods,
+} = {}) {
 	schemas = s;
 	methods = m;
 	functions = f;
 	objectOptions = o;
-
-	var schema = astToAjvSchema(toAst(code));
-
-	replaceObjectKeysWithString(schema);
-	replaceComments(schema);
-
-	return toJsonObject(schema);
-}
-
-function generateAjvSchema(ast, {schemas: s = {...defaultSchemas}} = {}) {
-	schemas = s;
 
 	var schema = astToAjvSchema(ast);
 

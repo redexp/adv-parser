@@ -28,7 +28,7 @@ var schemas = {
 };
 
 for (var name in schemas) {
-	schemas[name] = toAst(JSON.stringify(schemas[name]));
+	schemas[name] = toAst(schemas[name]);
 }
 
 module.exports = schemas;
