@@ -97,8 +97,8 @@ function astToAjvSchema(root) {
 	else if (t.isLogicalExpression(root)) {
 		return astEnumToAjvSchema(root);
 	}
-	else if (t.isStringLiteral(root)) {
-		return astStringToAjvSchema(root);
+	else if (t.isNumericLiteral(root) || t.isStringLiteral(root) || t.isBooleanLiteral(root)) {
+		return astValueLiteralToAjvSchema(root);
 	}
 	else if (t.isRegExpLiteral(root)) {
 		return astRegexToAjvSchema(root);
@@ -356,7 +356,7 @@ function astEnumToAjvSchema(root) {
 	}
 }
 
-function astStringToAjvSchema(root) {
+function astValueLiteralToAjvSchema(root) {
 	var $const = cloneDeep(astConst);
 
 	getProp($const, 'const').value = cloneDeep(root);

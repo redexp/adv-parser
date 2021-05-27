@@ -22,6 +22,9 @@ describe('parseSchema', function () {
 				name: string,
 				date: date-time-tz,
 				regex: /^\\d+$/,
+				constNumber: 10,
+				constString: "test",
+				constBoolean: true,
 				[optional]: string,
 				listInt: [int],
 				listStr: [{
@@ -42,7 +45,7 @@ describe('parseSchema', function () {
 		expect(res).to.eql({
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["id", "name", "date", "regex", "listInt", "listStr", "listObj", "listOr", "listTwo", "enumInt", "enumStr", "any_of", "all_of"],
+			"required": ["id", "name", "date", "regex", "constNumber", "constString", "constBoolean", "listInt", "listStr", "listObj", "listOr", "listTwo", "enumInt", "enumStr", "any_of", "all_of"],
 			"properties": {
 				id: {
 					"type": "number"
@@ -57,6 +60,15 @@ describe('parseSchema', function () {
 				regex: {
 					"type": "string",
 					pattern: "^\\d+$",
+				},
+				constNumber: {
+					"const": 10
+				},
+				constString: {
+					"const": "test"
+				},
+				constBoolean: {
+					"const": true
 				},
 				optional: {
 					"type": "string"
