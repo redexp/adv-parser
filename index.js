@@ -32,7 +32,7 @@ var functions = {};
 var objectOptions = {};
 
 /**
- * @param {string} code
+ * @param {string|function} code
  * @param {{schemas?: Object, methods?: Object<string, function>, functions?: Object<string, function>, objectOptions?: Object<string, function>}} params
  * @returns {Object}
  */
@@ -105,6 +105,9 @@ function astToAjvSchema(root) {
 	}
 	else if (t.isCallExpression(root)) {
 		return astCallExpToAjvSchema(root);
+	}
+	else if (t.isArrowFunctionExpression(root)) {
+		return astArrowFunctionToAjvSchema(root);
 	}
 	else {
 		throw new Error(`Unknown scheme node: ${root.type}`);
@@ -409,6 +412,17 @@ function astCallExpToAjvSchema(root) {
 	}
 
 	return schema;
+}
+
+function astArrowFunctionToAjvSchema(root) {
+	if (root.params.length === 1) {
+		return astAssignToAjvSchema(
+			t.assignmentExpression('=', root.params[0], root.body)
+		);
+	}
+	else {
+		return astToAjvSchema(root.body);
+	}
 }
 
 function addDescription(root, target) {

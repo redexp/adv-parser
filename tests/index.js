@@ -806,6 +806,41 @@ describe('parseSchema', function () {
 			type: 'array',
 		});
 	});
+
+	it('arrow function as code', function () {
+		var res = parser(User => ({[name]: string}));
+
+		expect(schemas).to.have.property('User');
+		expect(res).to.eql({
+			title: 'User',
+			type: 'object',
+			additionalProperties: false,
+			required: [],
+			properties: {
+				name: {
+					type: 'string'
+				}
+			},
+		});
+
+		res = parser(() => Test = {...User, test: number});
+
+		expect(schemas).to.have.property('User');
+		expect(res).to.eql({
+			title: 'Test',
+			type: 'object',
+			additionalProperties: false,
+			required: ['test'],
+			properties: {
+				name: {
+					type: 'string'
+				},
+				test: {
+					type: 'number'
+				},
+			},
+		});
+	});
 });
 
 describe('schemas', function () {

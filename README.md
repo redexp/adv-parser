@@ -1,4 +1,5 @@
-# adv-parser
+adv-parser
+----------
 
 [![Build Status](https://travis-ci.com/redexp/adv-parser.svg?branch=master)](https://travis-ci.com/redexp/adv-parser)
 
@@ -87,7 +88,12 @@ schema = {
 ```js
 const parser = require('adv-parser');
 
-const schema = parser(`{id: number}`);
+let schema = parser(`{id: number}`);
+
+// or as arrow function (which will be converted to string and parsed) 
+// if you want free syntax highlighting
+
+schema = parser(() => ({id: number}));
 
 schema == {
     type: 'object',
@@ -111,9 +117,13 @@ const schemas = {
 
 const schema1 = parser(`User = {id: number}`, {schemas});
 const schema2 = parser(`Test.SubTest = {name: string}`, {schemas});
+const schema3 = parser(Product => ({id: uuid}), {schemas});
+const schema4 = parser(() => Company = {name: /^\w+$/}, {schemas});
 
 schema1 == schemas.User;
 schema2 == schemas['Test.SubTest'];
+schema3 == schemas.Product;
+schema4 == schemas.Company;
 ```
 
 ### Custom methods
