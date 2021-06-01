@@ -1185,6 +1185,37 @@ describe('methods', function () {
 	});
 
 	describe('object', function () {
+		it('props', function () {
+			expect(p(`{id: number, [name]: string, age: number}.props('id', 'name')`)).to.eql({
+				type: 'object',
+				additionalProperties: false,
+				required: ['id'],
+				properties: {
+					id: {type: 'number'},
+					name: {type: 'string'},
+				},
+			});
+
+			p(`
+			# desc
+			User = {id: number, name: string}`);
+
+			expect(p(`User.props('id')`)).to.eql({
+				type: 'object',
+				additionalProperties: false,
+				required: ['id'],
+				properties: {
+					id: {type: 'number'},
+				},
+			});
+		});
+
+		it('prop', function () {
+			expect(p(`{id: number, name: string}.prop('id')`)).to.eql({
+				type: 'number'
+			});
+		});
+
 		it('additionalProperties', function () {
 			expect(p(`{id: number}.additionalProperties(true)`)).to.eql({
 				type: 'object',

@@ -405,10 +405,9 @@ function astCallExpToAjvSchema(root) {
 		throw new Error(`Method ${JSON.stringify(name)} must return schema`);
 	}
 
-	var title = t.isObjectExpression(schema) && getProp(schema, 'title');
-
-	if (title) {
+	if (schema.properties) {
 		removeProp(schema, 'title');
+		removeProp(schema, 'description');
 	}
 
 	return schema;
