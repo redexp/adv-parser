@@ -5,7 +5,8 @@ const {method, atLeastOne} = require('./utils');
 const {getProp, getPropStringValue, getPropName, replaceProp} = require('../lib/object');
 const {push, remove} = require('../lib/array');
 
-module.exports = function merge(target, schemas, {methodName = 'merge', clone = true} = {}) {
+module.exports = function merge(target, schemas, params = {}) {
+	const {methodName = 'merge', clone = true} = params;
 	method(methodName);
 	atLeastOne(schemas);
 
@@ -31,7 +32,7 @@ module.exports = function merge(target, schemas, {methodName = 'merge', clone = 
 	}
 
 	schemas.forEach(function (schema) {
-		schema = astToAjvSchema(schema);
+		schema = astToAjvSchema(schema, params);
 
 		var type = getPropStringValue(schema, 'type');
 

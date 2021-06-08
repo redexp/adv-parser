@@ -19,15 +19,15 @@ module.exports = function items(schema, args, params = {}) {
 	);
 };
 
-function convertArray(value) {
+function convertArray(value, params) {
 	const {astToAjvSchema} = require('../../index');
 
 	if (t.isArrayExpression(value)) {
 		value = {...value};
-		value.elements = value.elements.map(astToAjvSchema);
+		value.elements = value.elements.map(el => astToAjvSchema(el, params));
 	}
 	else {
-		value = astToAjvSchema(value);
+		value = astToAjvSchema(value, params);
 	}
 
 	return value;

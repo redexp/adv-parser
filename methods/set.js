@@ -3,7 +3,9 @@ const cloneDeep = require('lodash.clonedeep');
 const {getPropName, replaceProp} = require('../lib/object');
 const {method, objectOrTwo} = require('./utils');
 
-module.exports = function set(schema, args, {methodName = 'set', clone = true, convertValue = false, valueType} = {}) {
+module.exports = function set(schema, args, params = {}) {
+	const {methodName = 'set', clone = true, convertValue = false, valueType} = params;
+
 	method(methodName);
 	objectOrTwo(args);
 
@@ -29,10 +31,10 @@ module.exports = function set(schema, args, {methodName = 'set', clone = true, c
 	args.forEach(function ([name, value]) {
 		if (convertValue || t.isCallExpression(value)) {
 			if (typeof convertValue === 'function') {
-				value = convertValue(value);
+				value = convertValue(value, params);
 			}
 			else {
-				value = astToAjvSchema(value);
+				value = astToAjvSchema(value, params);
 			}
 		}
 

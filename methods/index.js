@@ -1,7 +1,7 @@
 const merge = require('./merge');
-const add = (target, schemas) => merge(target, schemas, {methodName: 'add'});
-const assign = (target, schemas) => merge(target, schemas, {methodName: 'assign'});
-const extend = (target, schemas) => merge(target, schemas, {methodName: 'extend'});
+const add = (target, schemas, params = {}) => merge(target, schemas, {methodName: 'add', ...params});
+const assign = (target, schemas, params = {}) => merge(target, schemas, {methodName: 'assign', ...params});
+const extend = (target, schemas, params = {}) => merge(target, schemas, {methodName: 'extend', ...params});
 const get = require('./get');
 const set = require('./set');
 const not = require('./not');
@@ -29,12 +29,12 @@ const unevaluatedItems = require('./array/unevaluatedItems');
 
 const prop = require('./object/prop');
 const props = require('./object/props');
-const pick = (schema, args) => props(schema, args, {methodName: 'pick'});
+const pick = (schema, args, params = {}) => props(schema, args, {methodName: 'pick', ...params});
 const remove = require('./object/remove');
-const omit = (schema, args) => remove(schema, args, {methodName: 'omit'});
+const omit = (schema, args, params = {}) => remove(schema, args, {methodName: 'omit', ...params});
 const required = require('./object/required');
 const notRequired = require('./object/notRequired');
-const optional = (schema, args) => notRequired(schema, args, {methodName: 'optional'});
+const optional = (schema, args, params = {}) => notRequired(schema, args, {methodName: 'optional', ...params});
 const additionalProperties = require('./object/additionalProperties');
 const dependencies = require('./object/dependencies');
 const dependentRequired = require('./object/dependentRequired');

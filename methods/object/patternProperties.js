@@ -22,7 +22,7 @@ module.exports = function patternProperties(schema, args, params = {}) {
 
 module.exports.convertProperties = convertProperties;
 
-function convertProperties(value) {
+function convertProperties(value, params) {
 	const {astToAjvSchema} = require('../../index');
 
 	if (t.isCallExpression(value)) {
@@ -41,7 +41,7 @@ function convertProperties(value) {
 
 		prop = {...prop};
 
-		prop.value = astToAjvSchema(prop.value);
+		prop.value = astToAjvSchema(prop.value, params);
 
 		return prop;
 	});

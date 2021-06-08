@@ -26,11 +26,6 @@ module.exports.getAstSchema = getAstSchema;
 module.exports.generateAjvSchema = generateAjvSchema;
 module.exports.astToAjvSchema = astToAjvSchema;
 
-var schemas = {};
-var methods = {};
-var functions = {};
-var objectOptions = {};
-
 /**
  * @param {string|function} code
  * @param {{schemas?: Object, methods?: Object<string, function>, functions?: Object<string, function>, objectOptions?: Object<string, function>}} params
@@ -41,17 +36,17 @@ function parseSchema(code, params) {
 }
 
 function generateAjvSchema(ast, {
-	schemas: s = {...defaultSchemas},
-	methods: m = defaultMethods,
-	functions: f,
-	objectOptions: o = defaultObjectMethods,
+	schemas = {...defaultSchemas},
+	methods = defaultMethods,
+	functions,
+	objectOptions = defaultObjectMethods,
 } = {}) {
-	schemas = s;
-	methods = m;
-	functions = f;
-	objectOptions = o;
-
-	var schema = astToAjvSchema(ast);
+	var schema = astToAjvSchema(ast, {
+		schemas,
+		methods,
+		functions,
+		objectOptions,
+	});
 
 	replaceObjectKeysWithString(schema);
 	replaceComments(schema);
@@ -81,45 +76,44 @@ function toJsonObject(schema) {
 	}
 }
 
-function astToAjvSchema(root) {
+function astToAjvSchema(root, params) {
 	if (t.isAssignmentExpression(root)) {
-		return astAssignToAjvSchema(root);
+		return astAssignToAjvSchema(root, params);
 	}
 	else if (t.isIdentifier(root) || t.isMemberExpression(root) || t.isBinaryExpression(root) || t.isNullLiteral(root)) {
-		return astObjectNameToAjvSchema(root);
+		return astObjectNameToAjvSchema(root, params);
 	}
 	else if (t.isObjectExpression(root)) {
-		return astObjectToAjvSchema(root);
+		return astObjectToAjvSchema(root, params);
 	}
 	else if (t.isArrayExpression(root)) {
-		return astArrayToAjvSchema(root);
+		return astArrayToAjvSchema(root, params);
 	}
 	else if (t.isLogicalExpression(root)) {
-		return astEnumToAjvSchema(root);
+		return astEnumToAjvSchema(root, params);
 	}
 	else if (t.isNumericLiteral(root) || t.isStringLiteral(root) || t.isBooleanLiteral(root)) {
-		return astValueLiteralToAjvSchema(root);
+		return astValueLiteralToAjvSchema(root, params);
 	}
 	else if (t.isRegExpLiteral(root)) {
-		return astRegexToAjvSchema(root);
+		return astRegexToAjvSchema(root, params);
 	}
 	else if (t.isCallExpression(root)) {
-		return astCallExpToAjvSchema(root);
+		return astCallExpToAjvSchema(root, params);
 	}
 	else if (t.isArrowFunctionExpression(root)) {
-		return astArrowFunctionToAjvSchema(root);
+		return astArrowFunctionToAjvSchema(root, params);
 	}
 	else {
 		throw new Error(`Unknown scheme node: ${root.type}`);
 	}
 }
 
-function astAssignToAjvSchema(root) {
-	var {right} = root;
-
-	var name = getSchemaName(root);
-
-	var schema = astToAjvSchema(right);
+function astAssignToAjvSchema(root, params) {
+	const {schemas} = params;
+	const {right} = root;
+	const name = getSchemaName(root);
+	const schema = astToAjvSchema(right, params);
 
 	addSchemaName(schema, name);
 	addDescription(root, schema);
@@ -129,7 +123,8 @@ function astAssignToAjvSchema(root) {
 	return schema;
 }
 
-function astObjectToAjvSchema(root) {
+function astObjectToAjvSchema(root, params) {
+	const {objectOptions} = params;
 	var pure = isPure(root);
 
 	if (pure && root.properties.every(prop => !t.isSpreadElement(prop))) {
@@ -177,7 +172,7 @@ function astObjectToAjvSchema(root) {
 
 			var src = prop.argument;
 
-			defaultMethods[isPure(src) ? 'set' : 'merge'](obj, [src], {clone: false});
+			defaultMethods[isPure(src) ? 'set' : 'merge'](obj, [src], {clone: false, ...params});
 
 			restoreProps();
 		}
@@ -197,7 +192,7 @@ function astObjectToAjvSchema(root) {
 				let method = name.slice(1);
 
 				if (objectOptions.hasOwnProperty(method)) {
-					objectOptions[method](obj, [prop.value], {clone: false});
+					objectOptions[method](obj, [prop.value], {clone: false, ...params});
 					restoreProps();
 					return;
 				}
@@ -217,7 +212,7 @@ function astObjectToAjvSchema(root) {
 			toggleRequired(name, !optional);
 
 			prop.computed = false; // [key]: => key:
-			prop.value = astToAjvSchema(value);
+			prop.value = astToAjvSchema(value, params);
 
 			addDescription(prop, prop.value);
 
@@ -235,22 +230,23 @@ function astObjectToAjvSchema(root) {
 	return obj;
 }
 
-function astObjectNameToAjvSchema(root) {
-	var name = getObjectName(root);
-	var ast = schemas[name];
+function astObjectNameToAjvSchema(root, params) {
+	const {schemas} = params;
+	const name = getObjectName(root);
+	const ast = schemas[name];
 
 	if (!ast) {
 		throw new Error(`Unknown OBJECT_NAME: ${name}`);
 	}
 
-	var schema = astToAjvSchema(cloneDeep(ast));
+	const schema = astToAjvSchema(cloneDeep(ast), params);
 
 	addSchemaName(schema, name);
 
 	return schema;
 }
 
-function astArrayToAjvSchema(root) {
+function astArrayToAjvSchema(root, params) {
 	var arr = cloneDeep(astArray);
 	var {elements} = root;
 
@@ -261,10 +257,10 @@ function astArrayToAjvSchema(root) {
 		let element = elements[0];
 
 		if (t.isSpreadElement(element)) {
-			addProp(arr, 'contains', astToAjvSchema(element.argument));
+			addProp(arr, 'contains', astToAjvSchema(element.argument, params));
 		}
 		else {
-			addProp(arr, 'items', astToAjvSchema(element));
+			addProp(arr, 'items', astToAjvSchema(element, params));
 		}
 		break;
 	default:
@@ -280,12 +276,12 @@ function astArrayToAjvSchema(root) {
 			t.arrayExpression(
 				elements
 					.filter(el => !t.isSpreadElement(el))
-					.map(astToAjvSchema)
+					.map(el => astToAjvSchema(el, params))
 			)
 		);
 
 		if (spreads.length > 0) {
-			addProp(arr, 'contains', astToAjvSchema(spreads[0].argument));
+			addProp(arr, 'contains', astToAjvSchema(spreads[0].argument, params));
 		}
 
 		break;
@@ -294,7 +290,7 @@ function astArrayToAjvSchema(root) {
 	return arr;
 }
 
-function astEnumToAjvSchema(root) {
+function astEnumToAjvSchema(root, params) {
 	var items = [];
 
 	var add = function (node) {
@@ -316,7 +312,7 @@ function astEnumToAjvSchema(root) {
 				add(item);
 			}
 			else {
-				items.push(astToAjvSchema(item));
+				items.push(astToAjvSchema(item, params));
 			}
 		};
 
@@ -375,7 +371,9 @@ function astRegexToAjvSchema(root) {
 	return regexp;
 }
 
-function astCallExpToAjvSchema(root) {
+function astCallExpToAjvSchema(root, params) {
+	const {methods, functions} = params;
+
 	if (t.isIdentifier(root.callee)) {
 		let func = functions && functions[root.callee.name];
 
@@ -390,16 +388,16 @@ function astCallExpToAjvSchema(root) {
 		throw new Error(`Invalid call expression: ${root.callee.type}`);
 	}
 
-	var {object, property} = root.callee;
-	var schema = astToAjvSchema(object);
-	var {name} = property;
-	var method = methods[name];
+	const {object, property} = root.callee;
+	var schema = astToAjvSchema(object, params);
+	const {name} = property;
+	const method = methods[name];
 
 	if (!method) {
 		throw new Error(`Unknown schema method: ${name}`);
 	}
 
-	schema = method(schema, root.arguments);
+	schema = method(schema, root.arguments, params);
 
 	if (!schema) {
 		throw new Error(`Method ${JSON.stringify(name)} must return schema`);
@@ -413,14 +411,15 @@ function astCallExpToAjvSchema(root) {
 	return schema;
 }
 
-function astArrowFunctionToAjvSchema(root) {
+function astArrowFunctionToAjvSchema(root, params) {
 	if (root.params.length === 1) {
 		return astAssignToAjvSchema(
-			t.assignmentExpression('=', root.params[0], root.body)
+			t.assignmentExpression('=', root.params[0], root.body),
+			params
 		);
 	}
 	else {
-		return astToAjvSchema(root.body);
+		return astToAjvSchema(root.body, params);
 	}
 }
 
