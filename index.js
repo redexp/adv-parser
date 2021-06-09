@@ -381,7 +381,7 @@ function astCallExpToAjvSchema(root, params) {
 			throw new Error(`Unknown function: ${root.callee.name}`);
 		}
 
-		return func(root.arguments);
+		return func(root.arguments, params);
 	}
 
 	if (!t.isMemberExpression(root.callee)) {
