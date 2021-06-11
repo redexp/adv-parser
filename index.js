@@ -125,26 +125,26 @@ function astAssignToAjvSchema(root, params) {
 
 function astObjectToAjvSchema(root, params) {
 	const {objectOptions} = params;
-	var pure = isPure(root);
+	const pure = isPure(root);
 
-	if (pure && root.properties.every(prop => !t.isSpreadElement(prop))) {
+	if (pure && root.properties.every(prop => !t.isSpreadElement(prop) && !isMethodProp(prop, objectOptions))) {
 		addDescription(root, root);
 		return root;
 	}
 
-	var type = pure && getProp(root, 'type');
-	var obj = pure ? t.objectExpression(type ? [cloneDeep(type)] : []) : cloneDeep(astObject);
+	const type = pure && getProp(root, 'type');
+	const obj = pure ? t.objectExpression(type ? [cloneDeep(type)] : []) : cloneDeep(astObject);
 	var required = getProp(obj, 'required');
 	var properties = getProp(obj, 'properties');
 
 	var props = [];
 
-	var restoreProps = function () {
+	const restoreProps = function () {
 		required = getProp(obj, 'required');
 		properties = getProp(obj, 'properties');
 	};
 
-	var flush = function () {
+	const flush = function () {
 		if (props.length === 0) return;
 
 		defaultMethods.set(obj, [t.objectExpression(props)], {clone: false});
@@ -153,8 +153,8 @@ function astObjectToAjvSchema(root, params) {
 		restoreProps();
 	};
 
-	var toggleRequired = function (name, add) {
-		var list = required.value.elements;
+	const toggleRequired = function (name, add) {
+		const list = required.value.elements;
 
 		if (add) {
 			if (list.every(s => s.value !== name)) {
@@ -175,29 +175,36 @@ function astObjectToAjvSchema(root, params) {
 			defaultMethods[isPure(src) ? 'set' : 'merge'](obj, [src], {clone: false, ...params});
 
 			restoreProps();
+
+			return;
 		}
-		else if (pure && t.isObjectProperty(prop)) {
-			if (prop.computed) {
+
+		if (!t.isObjectProperty(prop)) {
+			throw new Error(`Invalid object element: ${prop.type}`);
+		}
+
+		let {value} = prop;
+		let name = getPropName(prop);
+		let optional = prop.computed;
+
+		if (methodPropName.test(name)) {
+			let method = name.slice(1);
+
+			if (objectOptions.hasOwnProperty(method)) {
+				objectOptions[method](obj, [prop.value], {clone: false, ...params});
+				restoreProps();
+				return;
+			}
+		}
+
+		if (pure) {
+			if (optional) {
 				throw new Error(`Invalid object key: You can't use "optional" properties in pure ajv validator`);
 			}
 
 			props.push(prop);
 		}
-		else if (t.isObjectProperty(prop)) {
-			let {value} = prop;
-			let name = getPropName(prop);
-			let optional = prop.computed;
-
-			if (methodPropName.test(name)) {
-				let method = name.slice(1);
-
-				if (objectOptions.hasOwnProperty(method)) {
-					objectOptions[method](obj, [prop.value], {clone: false, ...params});
-					restoreProps();
-					return;
-				}
-			}
-
+		else {
 			if (optionalPropName.test(name)) {
 				name = prop.key.value = name.replace(optionalPropName, '');
 				optional = true;
@@ -217,9 +224,6 @@ function astObjectToAjvSchema(root, params) {
 			addDescription(prop, prop.value);
 
 			replaceProp(properties.value, prop);
-		}
-		else {
-			throw new Error(`Invalid object element: ${prop.type}`);
 		}
 	});
 
@@ -507,4 +511,10 @@ function addSchemaName(root, name) {
 			t.stringLiteral(name)
 		)
 	);
+}
+
+function isMethodProp(prop, objectOptions) {
+	let name = getPropName(prop);
+
+	return methodPropName.test(name) && objectOptions.hasOwnProperty(name.slice(1));
 }

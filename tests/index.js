@@ -715,6 +715,16 @@ describe('parseSchema', function () {
 			properties: {},
 			maxProperties: 5,
 		});
+
+		const set = require('../methods/set');
+
+		expect(originParser(`{type: 'string', $test: 1}`, {
+			objectOptions: {
+				test: function (schema, args, params) {
+					return set(schema, ['success', args[0]], params);
+				}
+			}
+		})).to.eql({type: 'string', success: 1});
 	});
 
 	it('array contains syntax', function () {
