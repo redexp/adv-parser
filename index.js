@@ -40,12 +40,14 @@ function generateAjvSchema(ast, {
 	methods = defaultMethods,
 	functions,
 	objectOptions = defaultObjectMethods,
+	arraySyntax = 8
 } = {}) {
 	var schema = astToAjvSchema(ast, {
 		schemas,
 		methods,
 		functions,
 		objectOptions,
+		arraySyntax,
 	});
 
 	replaceObjectKeysWithString(schema);
@@ -104,6 +106,9 @@ function astToAjvSchema(root, params) {
 	else if (t.isArrowFunctionExpression(root)) {
 		return astArrowFunctionToAjvSchema(root, params);
 	}
+	else if (t.isUnaryExpression(root) && root.operator === '!') {
+		return astUnaryToAjvSchema(root, params);
+	}
 	else {
 		throw new Error(`Unknown scheme node: ${root.type}`);
 	}
@@ -138,6 +143,7 @@ function astObjectToAjvSchema(root, params) {
 	var properties = getProp(obj, 'properties');
 
 	var props = [];
+	var patternProps = [];
 
 	const restoreProps = function () {
 		required = getProp(obj, 'required');
@@ -166,21 +172,26 @@ function astObjectToAjvSchema(root, params) {
 		}
 	};
 
-	root.properties.forEach(function (prop) {
+	for (let prop of root.properties) {
 		if (t.isSpreadElement(prop)) {
 			flush();
 
-			var src = prop.argument;
+			let src = prop.argument;
 
 			defaultMethods[isPure(src) ? 'set' : 'merge'](obj, [src], {clone: false, ...params});
 
 			restoreProps();
 
-			return;
+			continue;
 		}
 
 		if (!t.isObjectProperty(prop)) {
 			throw new Error(`Invalid object element: ${prop.type}`);
+		}
+
+		if (t.isRegExpLiteral(prop.key)) {
+			patternProps.push(prop);
+			continue;
 		}
 
 		let {value} = prop;
@@ -193,7 +204,7 @@ function astObjectToAjvSchema(root, params) {
 			if (objectOptions.hasOwnProperty(method)) {
 				objectOptions[method](obj, [prop.value], {clone: false, ...params});
 				restoreProps();
-				return;
+				continue;
 			}
 		}
 
@@ -213,7 +224,7 @@ function astObjectToAjvSchema(root, params) {
 			if (t.isIdentifier(value) && value.name === 'undefined') {
 				toggleRequired(name, false);
 				removeProp(properties.value, name);
-				return;
+				continue;
 			}
 
 			toggleRequired(name, !optional);
@@ -225,9 +236,18 @@ function astObjectToAjvSchema(root, params) {
 
 			replaceProp(properties.value, prop);
 		}
-	});
+	}
 
 	flush();
+
+	if (patternProps.length > 0) {
+		addProp(obj, 'patternProperties', t.objectExpression(patternProps.map(prop => {
+			return t.objectProperty(
+				t.stringLiteral(prop.key.pattern),
+				astToAjvSchema(prop.value, params)
+			);
+		})))
+	}
 
 	addDescription(root, obj);
 
@@ -250,9 +270,22 @@ function astObjectNameToAjvSchema(root, params) {
 	return schema;
 }
 
-function astArrayToAjvSchema(root, params) {
+function astArrayToAjvSchema(root, params, exact) {
 	var arr = cloneDeep(astArray);
 	var {elements} = root;
+	const {arraySyntax} = params;
+	const v8 = arraySyntax === 8;
+
+	exact = exact === true;
+
+	if (exact) {
+		if (elements.some(el => t.isSpreadElement(el))) {
+			throw new Error(`Invalid array syntax. Exclamation sign with spread is not allowed`);
+		}
+
+		addProp(arr, 'minItems', t.numericLiteral(elements.length));
+		addProp(arr, 'maxItems', t.numericLiteral(elements.length));
+	}
 
 	switch (elements.length) {
 	case 0:
@@ -276,7 +309,7 @@ function astArrayToAjvSchema(root, params) {
 
 		addProp(
 			arr,
-			'items',
+			v8 ? 'prefixItems' : 'items',
 			t.arrayExpression(
 				elements
 					.filter(el => !t.isSpreadElement(el))
@@ -285,7 +318,7 @@ function astArrayToAjvSchema(root, params) {
 		);
 
 		if (spreads.length > 0) {
-			addProp(arr, 'contains', astToAjvSchema(spreads[0].argument, params));
+			addProp(arr, v8 ? 'items' : 'contains', astToAjvSchema(spreads[0].argument, params));
 		}
 
 		break;
@@ -427,6 +460,14 @@ function astArrowFunctionToAjvSchema(root, params) {
 	}
 }
 
+function astUnaryToAjvSchema(root, params) {
+	if (t.isArrayExpression(root.argument)) {
+		return astArrayToAjvSchema(root.argument, params, true);
+	}
+
+	return astToAjvSchema(root.argument, params);
+}
+
 function addDescription(root, target) {
 	let comments = root.leadingComments || root.trailingComments;
 
@@ -445,8 +486,8 @@ function addDescription(root, target) {
 
 function replaceObjectKeysWithString(root) {
 	if (t.isObjectExpression(root)) {
-		root.properties.forEach(function (prop) {
-			var {key} = prop;
+		for (let prop of root.properties) {
+			let {key} = prop;
 
 			if (t.isIdentifier(key)) {
 				prop.key = t.stringLiteral(key.name);
@@ -459,7 +500,7 @@ function replaceObjectKeysWithString(root) {
 			}
 
 			replaceObjectKeysWithString(prop.value);
-		});
+		}
 	}
 	else if (t.isArrayExpression(root)) {
 		root.elements.forEach(replaceObjectKeysWithString);

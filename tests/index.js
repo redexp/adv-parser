@@ -7,8 +7,8 @@ describe('parseSchema', function () {
 	
 	var schemas = {};
 	
-	const parser = function (code) {
-		return originParser(code, {schemas});
+	const parser = function (code, params = {}) {
+		return originParser(code, {schemas, ...params});
 	};
 
 	beforeEach(function () {
@@ -733,18 +733,40 @@ describe('parseSchema', function () {
 			type: 'array',
 			items: {type: 'number'},
 		});
+		expect(p(`![number]`)).to.eql({
+			type: 'array',
+			items: {type: 'number'},
+			minItems: 1,
+			maxItems: 1,
+		});
 		expect(p(`[number, string]`)).to.eql({
 			type: 'array',
-			items: [
+			prefixItems: [
 				{type: 'number'},
 				{type: 'string'},
 			],
+		});
+		expect(p(`![number, string]`)).to.eql({
+			type: 'array',
+			prefixItems: [
+				{type: 'number'},
+				{type: 'string'},
+			],
+			minItems: 2,
+			maxItems: 2,
 		});
 		expect(p(`[...number]`)).to.eql({
 			type: 'array',
 			contains: {type: 'number'},
 		});
 		expect(p(`[number, ...string]`)).to.eql({
+			type: 'array',
+			prefixItems: [
+				{type: 'number'}
+			],
+			items: {type: 'string'},
+		});
+		expect(parser(`[number, ...string]`, {arraySyntax: 7})).to.eql({
 			type: 'array',
 			items: [
 				{type: 'number'}
@@ -753,19 +775,19 @@ describe('parseSchema', function () {
 		});
 		expect(p(`[number, number, ...string]`)).to.eql({
 			type: 'array',
-			items: [
+			prefixItems: [
 				{type: 'number'},
 				{type: 'number'},
 			],
-			contains: {type: 'string'},
+			items: {type: 'string'},
 		});
 		expect(p(`[number, number, ...(string || boolean)]`)).to.eql({
 			type: 'array',
-			items: [
+			prefixItems: [
 				{type: 'number'},
 				{type: 'number'},
 			],
-			contains: {
+			items: {
 				anyOf: [
 					{type: 'string'},
 					{type: 'boolean'},
@@ -774,11 +796,11 @@ describe('parseSchema', function () {
 		});
 		expect(p(`[number, number, ...(string || boolean)].minContains(1).maxContains(5)`)).to.eql({
 			type: 'array',
-			items: [
+			prefixItems: [
 				{type: 'number'},
 				{type: 'number'},
 			],
-			contains: {
+			items: {
 				anyOf: [
 					{type: 'string'},
 					{type: 'boolean'},
@@ -803,6 +825,11 @@ describe('parseSchema', function () {
 		});
 		expect(p(`[]`)).to.eql({
 			type: 'array',
+		});
+		expect(p(`![]`)).to.eql({
+			type: 'array',
+			minItems: 0,
+			maxItems: 0,
 		});
 		expect(p(`array.items([number])`)).to.eql({
 			type: 'array',
@@ -849,6 +876,39 @@ describe('parseSchema', function () {
 					type: 'number'
 				},
 			},
+		});
+	});
+
+	it('type as string const', function () {
+		var res = parser(Test => ({type: !"test"}));
+
+		expect(res).to.eql({
+			title: 'Test',
+			type: 'object',
+			required: ['type'],
+			additionalProperties: false,
+			properties: {
+				type: {
+					const: "test",
+				}
+			}
+		});
+	});
+
+	it('prop name as regexp', function () {
+		var res = parser(Test => ({[/^\d+$/]: string}));
+
+		expect(res).to.eql({
+			title: 'Test',
+			type: 'object',
+			required: [],
+			additionalProperties: false,
+			properties: {},
+			patternProperties: {
+				"^\\d+$": {
+					type: "string",
+				}
+			}
 		});
 	});
 });
