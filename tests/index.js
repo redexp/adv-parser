@@ -741,14 +741,14 @@ describe('parseSchema', function () {
 		});
 		expect(p(`[number, string]`)).to.eql({
 			type: 'array',
-			prefixItems: [
+			items: [
 				{type: 'number'},
 				{type: 'string'},
 			],
 		});
 		expect(p(`![number, string]`)).to.eql({
 			type: 'array',
-			prefixItems: [
+			items: [
 				{type: 'number'},
 				{type: 'string'},
 			],
@@ -761,33 +761,33 @@ describe('parseSchema', function () {
 		});
 		expect(p(`[number, ...string]`)).to.eql({
 			type: 'array',
-			prefixItems: [
-				{type: 'number'}
-			],
-			items: {type: 'string'},
-		});
-		expect(parser(`[number, ...string]`, {arraySyntax: 7})).to.eql({
-			type: 'array',
 			items: [
 				{type: 'number'}
 			],
-			contains: {type: 'string'},
+			additionalItems: {type: 'string'},
 		});
-		expect(p(`[number, number, ...string]`)).to.eql({
+		expect(parser(`[number, ...string]`, {schemaVersion: '2020'})).to.eql({
 			type: 'array',
 			prefixItems: [
-				{type: 'number'},
-				{type: 'number'},
+				{type: 'number'}
 			],
 			items: {type: 'string'},
 		});
-		expect(p(`[number, number, ...(string || boolean)]`)).to.eql({
+		expect(p(`[number, number, ...string]`)).to.eql({
 			type: 'array',
-			prefixItems: [
+			items: [
 				{type: 'number'},
 				{type: 'number'},
 			],
-			items: {
+			additionalItems: {type: 'string'},
+		});
+		expect(p(`[number, number, ...(string || boolean)]`)).to.eql({
+			type: 'array',
+			items: [
+				{type: 'number'},
+				{type: 'number'},
+			],
+			additionalItems: {
 				anyOf: [
 					{type: 'string'},
 					{type: 'boolean'},
@@ -796,11 +796,11 @@ describe('parseSchema', function () {
 		});
 		expect(p(`[number, number, ...(string || boolean)].minContains(1).maxContains(5)`)).to.eql({
 			type: 'array',
-			prefixItems: [
+			items: [
 				{type: 'number'},
 				{type: 'number'},
 			],
-			items: {
+			additionalItems: {
 				anyOf: [
 					{type: 'string'},
 					{type: 'boolean'},

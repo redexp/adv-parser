@@ -40,14 +40,14 @@ function generateAjvSchema(ast, {
 	methods = defaultMethods,
 	functions,
 	objectOptions = defaultObjectMethods,
-	arraySyntax = 8
+	schemaVersion = '07'
 } = {}) {
 	var schema = astToAjvSchema(ast, {
 		schemas,
 		methods,
 		functions,
 		objectOptions,
-		arraySyntax,
+		schemaVersion,
 	});
 
 	replaceObjectKeysWithString(schema);
@@ -273,8 +273,8 @@ function astObjectNameToAjvSchema(root, params) {
 function astArrayToAjvSchema(root, params, exact) {
 	var arr = cloneDeep(astArray);
 	var {elements} = root;
-	const {arraySyntax} = params;
-	const v8 = arraySyntax === 8;
+	const {schemaVersion} = params;
+	const v2020 = schemaVersion === '2020';
 
 	exact = exact === true;
 
@@ -309,7 +309,7 @@ function astArrayToAjvSchema(root, params, exact) {
 
 		addProp(
 			arr,
-			v8 ? 'prefixItems' : 'items',
+			v2020 ? 'prefixItems' : 'items',
 			t.arrayExpression(
 				elements
 					.filter(el => !t.isSpreadElement(el))
@@ -318,7 +318,7 @@ function astArrayToAjvSchema(root, params, exact) {
 		);
 
 		if (spreads.length > 0) {
-			addProp(arr, v8 ? 'items' : 'contains', astToAjvSchema(spreads[0].argument, params));
+			addProp(arr, v2020 ? 'items' : 'additionalItems', astToAjvSchema(spreads[0].argument, params));
 		}
 
 		break;
