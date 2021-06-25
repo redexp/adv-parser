@@ -28,7 +28,7 @@ module.exports.astToAjvSchema = astToAjvSchema;
 
 /**
  * @param {string|function} code
- * @param {{schemas?: Object, methods?: Object<string, function>, functions?: Object<string, function>, objectOptions?: Object<string, function>}} params
+ * @param {{schemas?: Object, methods?: Object<string, function>, functions?: Object<string, function>, objectOptions?: Object<string, function>, schemaVersion?: string}} params
  * @returns {Object}
  */
 function parseSchema(code, params) {
