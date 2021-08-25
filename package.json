@@ -1,6 +1,6 @@
 {
   "name": "adv-parser",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "ADV parser",
   "main": "index.js",
   "types": "index.d.ts",
@@ -29,16 +29,16 @@
     "access": "public"
   },
   "dependencies": {
-    "@babel/generator": "^7.14.5",
-    "@babel/parser": "^7.14.7",
-    "@babel/types": "^7.14.5",
+    "@babel/generator": "^7.15.0",
+    "@babel/parser": "^7.15.3",
+    "@babel/types": "^7.15.0",
     "lodash.clonedeep": "^4.5.0",
     "lodash.keyby": "^4.6.0"
   },
   "devDependencies": {
-    "ajv": "^8.6.0",
-    "ajv-formats": "^2.1.0",
+    "ajv": "^8.6.2",
+    "ajv-formats": "^2.1.1",
     "chai": "^4.3.4",
-    "mocha": "^8.4.0"
+    "mocha": "^9.1.0"
   }
 }

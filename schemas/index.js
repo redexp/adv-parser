@@ -1,4 +1,8 @@
 const toAst = require('../lib/toAst');
+const dt = require('./date-time');
+const dtt = require('./date-time-tz');
+const ur = require('./uri-reference');
+const ut = require('./uri-template');
 
 var schemas = {
 	null: require('./null'),
@@ -13,11 +17,22 @@ var schemas = {
 	boolean: require('./boolean'),
 	date: require('./date'),
 	time: require('./time'),
-	"date-time": require('./date-time'),
-	"date-time-tz": require('./date-time-tz'),
+	"date-time": dt,
+	date_time: dt,
+	datetime: dt,
+	dateTime: dt,
+	"date-time-tz": dtt,
+	date_time_tz: dtt,
+	datetimetz: dtt,
+	dateTimeTz: dtt,
+	dateTimeTZ: dtt,
 	uri: require('./uri'),
-	"uri-reference": require('./uri-reference'),
-	"uri-template": require('./uri-template'),
+	"uri-reference": ur,
+	uri_reference: ur,
+	uriReference: ur,
+	"uri-template": ut,
+	uri_template: ut,
+	uriTemplate: ut,
 	email: require('./email'),
 	hostname: require('./hostname'),
 	filename: require('./filename'),

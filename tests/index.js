@@ -20,7 +20,8 @@ describe('parseSchema', function () {
 			{
 				id: number,
 				name: string,
-				date: date-time-tz,
+				date: date-time,
+				[dateTz]: dateTimeTZ,
 				regex: /^\\d+$/,
 				constNumber: 10,
 				constString: "test",
@@ -55,7 +56,11 @@ describe('parseSchema', function () {
 				},
 				date: {
 					"type": "string",
-					pattern: "^\\d{4}-[01]\\d-[0-3]\\d[tT\\s](?:[0-2]\\d:[0-5]\\d:[0-5]\\d|23:59:60)(?:\\.\\d+)?(?:z|[+-]\\d{2}(?::?\\d{2})?)$",
+					pattern: "^\\d{4}-[01]\\d-[0-3]\\d[tT\\s](?:[0-2]\\d:[0-5]\\d:[0-5]\\d|23:59:60)(?:\\.\\d+)?(?:[zZ]|[+-]\\d{2}(?::?\\d{2})?)?$",
+				},
+				dateTz: {
+					"type": "string",
+					pattern: "^\\d{4}-[01]\\d-[0-3]\\d[tT\\s](?:[0-2]\\d:[0-5]\\d:[0-5]\\d|23:59:60)(?:\\.\\d+)?(?:[zZ]|[+-]\\d{2}(?::?\\d{2})?)$",
 				},
 				regex: {
 					"type": "string",
