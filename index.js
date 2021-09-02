@@ -330,7 +330,7 @@ function astArrayToAjvSchema(root, params, exact) {
 function astEnumToAjvSchema(root, params) {
 	var items = [];
 
-	var add = function (node) {
+	const traverse = function (node, cb) {
 		var {left, right, operator} = node;
 
 		if (operator !== '||' && operator !== '&&') {
@@ -341,31 +341,49 @@ function astEnumToAjvSchema(root, params) {
 			throw new Error(`All operators of enum should be same type: ${root.operator}`);
 		}
 
-		var check = function (item) {
-			if (t.isStringLiteral(item) || t.isNumericLiteral(item)) {
-				items.push(item);
-			}
-			else if (t.isLogicalExpression(item)) {
-				add(item);
-			}
-			else {
-				items.push(astToAjvSchema(item, params));
-			}
-		};
+		if (t.isLogicalExpression(left)) {
+			traverse(left, cb);
+		}
+		else if (cb(left) === false) {
+			return;
+		}
 
-		check(left);
-		check(right);
+		if (t.isLogicalExpression(right)) {
+			traverse(right, cb);
+		}
+		else {
+			cb(right);
+		}
 	};
 
-	add(root);
+	const add = function (item) {
+		if (isEnum && (t.isStringLiteral(item) || t.isNumericLiteral(item))) {
+			items.push(item);
+		}
+		else {
+			items.push(astToAjvSchema(item, params));
+		}
+	};
+
+	let isEnum = true;
+
+	const check = function (item) {
+		if (!t.isStringLiteral(item) && !t.isNumericLiteral(item)) {
+			isEnum = false;
+			return false;
+		}
+	};
+
+	traverse(root, check);
+	traverse(root, add);
 
 	var first = items[0];
 
-	if (items.some(item => item.type !== first.type)) {
-		throw new Error(`All items of enum should be same type`);
-	}
+	if (isEnum) {
+		if (items.some(item => item.type !== first.type)) {
+			throw new Error(`All items of enum should be same type`);
+		}
 
-	if (t.isStringLiteral(first) || t.isNumericLiteral(first)) {
 		if (root.operator !== '||') {
 			throw new Error(`Invalid operator for enum: ${root.operator}`);
 		}

@@ -916,6 +916,57 @@ describe('parseSchema', function () {
 			}
 		});
 	});
+
+	it('string or null', function () {
+		var res = parser(Test => ({test: string || null}));
+
+		expect(res).to.eql({
+			title: 'Test',
+			type: 'object',
+			required: ['test'],
+			additionalProperties: false,
+			properties: {
+				test: {
+					anyOf: [
+						{type: 'string'},
+						{type: 'null'}
+					]
+				}
+			},
+		});
+
+		res = parser(Test2 => ({test: 'string' || 'null'}));
+
+		expect(res).to.eql({
+			title: 'Test2',
+			type: 'object',
+			required: ['test'],
+			additionalProperties: false,
+			properties: {
+				test: {
+					type: 'string',
+					enum: ['string', 'null'],
+				}
+			},
+		});
+
+		res = parser(Test3 => ({test: 'string' || null}));
+
+		expect(res).to.eql({
+			title: 'Test3',
+			type: 'object',
+			required: ['test'],
+			additionalProperties: false,
+			properties: {
+				test: {
+					anyOf: [
+						{const: 'string'},
+						{type: 'null'}
+					]
+				}
+			},
+		});
+	});
 });
 
 describe('schemas', function () {
