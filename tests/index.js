@@ -967,6 +967,22 @@ describe('parseSchema', function () {
 			},
 		});
 	});
+
+	it('$ref', function () {
+		var res = parser(Test => ({test: {$ref: "asd"}}));
+
+		expect(res).to.eql({
+			title: 'Test',
+			type: 'object',
+			required: ['test'],
+			additionalProperties: false,
+			properties: {
+				test: {
+					$ref: "asd"
+				}
+			},
+		});
+	});
 });
 
 describe('schemas', function () {
@@ -1480,6 +1496,48 @@ describe('methods', function () {
 					test1: {type: 'number'},
 				},
 				unevaluatedProperties: true
+			});
+		});
+
+		it('id', function () {
+			expect(p(`
+			{
+				test1: number, 
+			}
+			.id("asd")
+			`)).to.eql({
+				$id: 'asd',
+				type: 'object',
+				additionalProperties: false,
+				required: ['test1'],
+				properties: {
+					test1: {type: 'number'},
+				},
+			});
+
+			expect(p(`
+			{
+				$id: 'qwe',
+				test1: number, 
+			}
+			`)).to.eql({
+				$id: 'qwe',
+				type: 'object',
+				additionalProperties: false,
+				required: ['test1'],
+				properties: {
+					test1: {type: 'number'},
+				},
+			});
+
+			expect(p(`
+			[{$ref: "asd"}].id("qwe")
+			`)).to.eql({
+				$id: 'qwe',
+				type: 'array',
+				items: {
+					$ref: 'asd',
+				},
 			});
 		});
 	});

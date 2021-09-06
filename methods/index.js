@@ -44,6 +44,7 @@ const minProperties = require('./object/minProperties');
 const patternProperties = require('./object/patternProperties');
 const propertyNames = require('./object/propertyNames');
 const unevaluatedProperties = require('./object/unevaluatedProperties');
+const id = require('./object/id');
 
 module.exports = {
 	merge,
@@ -92,4 +93,5 @@ module.exports = {
 	patternProperties,
 	propertyNames,
 	unevaluatedProperties,
+	id,
 };

@@ -8,6 +8,7 @@ const patternProperties = require('./patternProperties');
 const propertyNames = require('./propertyNames');
 const required = require('./required');
 const unevaluatedProperties = require('./unevaluatedProperties');
+const id = require('./id');
 
 module.exports = {
 	additionalProperties,
@@ -20,4 +21,5 @@ module.exports = {
 	propertyNames,
 	required,
 	unevaluatedProperties,
+	id,
 };
