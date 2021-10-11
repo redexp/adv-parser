@@ -42,7 +42,7 @@ function generateAjvSchema(ast, {
 	objectOptions = defaultObjectMethods,
 	schemaVersion = '07'
 } = {}) {
-	var schema = astToAjvSchema(ast, {
+	const schema = astToAjvSchema(ast, {
 		schemas,
 		methods,
 		functions,
@@ -57,11 +57,11 @@ function generateAjvSchema(ast, {
 }
 
 function getAstSchema(code, {schemas} = {}) {
-	var schema = toAst(code);
+	const schema = toAst(code);
 
 	if (schemas && t.isAssignmentExpression(schema)) {
 		let {left, right} = schema;
-		var name = getObjectName(left);
+		const name = getObjectName(left);
 
 		schemas[name] = right;
 	}
@@ -274,8 +274,8 @@ function astObjectNameToAjvSchema(root, params) {
 }
 
 function astArrayToAjvSchema(root, params, exact) {
-	var arr = cloneDeep(astArray);
-	var {elements} = root;
+	const arr = cloneDeep(astArray);
+	const {elements} = root;
 	const {schemaVersion} = params;
 	const v2020 = schemaVersion === '2020';
 
@@ -331,10 +331,10 @@ function astArrayToAjvSchema(root, params, exact) {
 }
 
 function astEnumToAjvSchema(root, params) {
-	var items = [];
+	const items = [];
 
 	const traverse = function (node, cb) {
-		var {left, right, operator} = node;
+		const {left, right, operator} = node;
 
 		if (operator !== '||' && operator !== '&&') {
 			throw new Error(`Invalid enum operator: ${operator}`);
@@ -395,7 +395,7 @@ function astEnumToAjvSchema(root, params) {
 	traverse(root, checkIsEnum);
 	traverse(root, add);
 
-	var first = items[0];
+	const first = items[0];
 
 	if (isEnum) {
 		if (items.some(item => item.type !== first.type)) {
@@ -406,7 +406,7 @@ function astEnumToAjvSchema(root, params) {
 			throw new Error(`Invalid operator for enum: ${root.operator}`);
 		}
 
-		var $enum = cloneDeep(astEnum);
+		const $enum = cloneDeep(astEnum);
 		getProp($enum, 'enum').value.elements = items;
 
 		if (t.isNumericLiteral(first)) {
@@ -417,19 +417,19 @@ function astEnumToAjvSchema(root, params) {
 	}
 
 	if (root.operator === '||') {
-		var anyOf = cloneDeep(astAnyOf);
+		const anyOf = cloneDeep(astAnyOf);
 		getProp(anyOf, 'anyOf').value.elements = items;
 		return anyOf;
 	}
 	else {
-		var allOf = cloneDeep(astAllOf);
+		const allOf = cloneDeep(astAllOf);
 		getProp(allOf, 'allOf').value.elements = items;
 		return allOf;
 	}
 }
 
 function astValueLiteralToAjvSchema(root) {
-	var $const = cloneDeep(astConst);
+	const $const = cloneDeep(astConst);
 
 	getProp($const, 'const').value = cloneDeep(root);
 
@@ -437,7 +437,7 @@ function astValueLiteralToAjvSchema(root) {
 }
 
 function astRegexToAjvSchema(root) {
-	var regexp = cloneDeep(astRegexp);
+	const regexp = cloneDeep(astRegexp);
 
 	getProp(regexp, 'pattern').value = t.stringLiteral(root.pattern);
 
@@ -619,7 +619,7 @@ function replaceComments(root) {
 function getSchemaName(root) {
 	if (!t.isAssignmentExpression(root)) return;
 
-	var {left, operator} = root;
+	const {left, operator} = root;
 
 	if (operator !== '=') {
 		throw new Error(`Invalid assign operator: ${JSON.stringify(operator)}`);
