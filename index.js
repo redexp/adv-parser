@@ -82,6 +82,9 @@ function astToAjvSchema(root, params) {
 	if (t.isAssignmentExpression(root)) {
 		return astAssignToAjvSchema(root, params);
 	}
+	else if (isRightShiftWithObjects(root)) {
+		return astRightShiftToAjvSchema(root, params);
+	}
 	else if (t.isIdentifier(root) || t.isMemberExpression(root) || t.isBinaryExpression(root) || t.isNullLiteral(root)) {
 		return astObjectNameToAjvSchema(root, params);
 	}
@@ -341,14 +344,14 @@ function astEnumToAjvSchema(root, params) {
 			throw new Error(`All operators of enum should be same type: ${root.operator}`);
 		}
 
-		if (t.isLogicalExpression(left)) {
+		if (t.isLogicalExpression(left) && !(left.extra && left.extra.parenthesized)) {
 			traverse(left, cb);
 		}
 		else if (cb(left) === false) {
 			return;
 		}
 
-		if (t.isLogicalExpression(right)) {
+		if (t.isLogicalExpression(right) && !(right.extra && right.extra.parenthesized)) {
 			traverse(right, cb);
 		}
 		else {
@@ -367,14 +370,29 @@ function astEnumToAjvSchema(root, params) {
 
 	let isEnum = true;
 
-	const check = function (item) {
+	const checkIsEnum = function (item) {
 		if (!t.isStringLiteral(item) && !t.isNumericLiteral(item)) {
 			isEnum = false;
 			return false;
 		}
 	};
 
-	traverse(root, check);
+	let isIfThen = true;
+
+	const checkIsIfThen = function (item) {
+		if (!isRightShiftWithObjects(item)) {
+			isIfThen = false;
+			return false;
+		}
+	};
+
+	traverse(root, checkIsIfThen);
+
+	if (isIfThen && root.operator === '||') {
+		return astOrWithRightShiftToAjvSchema(root, params);
+	}
+
+	traverse(root, checkIsEnum);
 	traverse(root, add);
 
 	var first = items[0];
@@ -486,6 +504,56 @@ function astUnaryToAjvSchema(root, params) {
 	return astToAjvSchema(root.argument, params);
 }
 
+function astRightShiftToAjvSchema({left, right}, params) {
+	const ifThen = t.objectExpression([]);
+
+	const _if = astToAjvSchema(left, params);
+	getProp(_if, 'additionalProperties').value.value = true;
+
+	let _then = t.objectExpression([
+		t.spreadElement(left),
+		t.spreadElement(right),
+	]);
+
+	_then = astToAjvSchema(_then, params);
+
+	addProp(ifThen, 'if', _if);
+	addProp(ifThen, 'then', _then);
+
+	return ifThen;
+}
+
+function astOrWithRightShiftToAjvSchema(root, params) {
+	const ifs = [];
+
+	const add = function ({left, right}) {
+		const ifThen = astRightShiftToAjvSchema(left, params);
+
+		ifs.push(getProp(ifThen, 'if').value);
+
+		let _else;
+
+		if (t.isLogicalExpression(right)) {
+			_else = add(right);
+		}
+		else {
+			_else = astRightShiftToAjvSchema(right, params);
+			ifs.push(getProp(_else, 'if').value);
+
+			const oneOf = toAst({oneOf: []});
+			oneOf.properties[0].value.elements = ifs;
+
+			addProp(_else, 'else', oneOf);
+		}
+
+		addProp(ifThen, 'else', _else);
+
+		return ifThen;
+	};
+
+	return add(root);
+}
+
 function addDescription(root, target) {
 	let comments = root.leadingComments || root.trailingComments;
 
@@ -576,4 +644,11 @@ function isMethodProp(prop, objectOptions) {
 	let name = getPropName(prop);
 
 	return methodPropName.test(name) && objectOptions.hasOwnProperty(name.slice(1));
+}
+
+function isRightShiftWithObjects(root) {
+	return (
+		t.isBinaryExpression(root) &&
+		root.operator === '>>'
+	);
 }

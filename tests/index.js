@@ -983,6 +983,170 @@ describe('parseSchema', function () {
 			},
 		});
 	});
+
+	it('>> to if:', function () {
+		var res = parser(Test => (
+			{id: 1} >>
+			{test: 'one'}
+		));
+
+		expect(res).to.eql({
+			title: 'Test',
+			if: {
+				type: 'object',
+				additionalProperties: true,
+				required: ['id'],
+				properties: {
+					id: {const: 1}
+				}
+			},
+			then: {
+				type: 'object',
+				required: ['id', 'test'],
+				additionalProperties: false,
+				properties: {
+					id: {const: 1},
+					test: {const: 'one'},
+				}
+			}
+		});
+
+		parser(User => (
+			{name: 'User'}
+		));
+
+		res = parser(Test2 => (
+			User >>
+			{test: 'test2'}
+		));
+
+		expect(res).to.eql({
+			title: 'Test2',
+			if: {
+				title: 'User',
+				type: 'object',
+				additionalProperties: true,
+				required: ['name'],
+				properties: {
+					name: {const: 'User'}
+				}
+			},
+			then: {
+				type: 'object',
+				required: ['name', 'test'],
+				additionalProperties: false,
+				properties: {
+					name: {const: 'User'},
+					test: {const: 'test2'},
+				}
+			}
+		});
+
+		parser(User2 => (
+			{test: 'User2'}
+		));
+
+		res = parser(Test3 => (
+			User.add({id: number}) >>
+			User2.optional('test')
+		));
+
+		expect(res).to.eql({
+			title: 'Test3',
+			if: {
+				type: 'object',
+				additionalProperties: true,
+				required: ['name', 'id'],
+				properties: {
+					name: {const: 'User'},
+					id: {type: 'number'},
+				}
+			},
+			then: {
+				type: 'object',
+				required: ['name', 'id'],
+				additionalProperties: false,
+				properties: {
+					name: {const: 'User'},
+					id: {type: 'number'},
+					test: {const: 'User2'},
+				}
+			}
+		});
+	});
+
+	it('switch', function () {
+		var res = parser(Test => (
+			(
+				{id: 1} >>
+				{title: !'one'}
+			) ||
+			(
+				{id: 2} >>
+				{title: !'two'}
+			)
+		));
+
+		expect(res).to.eql({
+			title: 'Test',
+			if: {
+				type: 'object',
+				additionalProperties: true,
+				required: ['id'],
+				properties: {
+					id: {const: 1}
+				}
+			},
+			then: {
+				type: 'object',
+				required: ['id', 'title'],
+				additionalProperties: false,
+				properties: {
+					id: {const: 1},
+					title: {const: 'one'},
+				}
+			},
+			else: {
+				if: {
+					type: 'object',
+					additionalProperties: true,
+					required: ['id'],
+					properties: {
+						id: {const: 2}
+					}
+				},
+				then: {
+					type: 'object',
+					required: ['id', 'title'],
+					additionalProperties: false,
+					properties: {
+						id: {const: 2},
+						title: {const: 'two'},
+					}
+				},
+				else: {
+					oneOf: [
+						{
+							type: 'object',
+							additionalProperties: true,
+							required: ['id'],
+							properties: {
+								id: {const: 1}
+							}
+						},
+						{
+							type: 'object',
+							additionalProperties: true,
+							required: ['id'],
+							properties: {
+								id: {const: 2}
+							}
+						}
+					]
+				}
+			}
+		});
+	});
 });
 
 describe('schemas', function () {
