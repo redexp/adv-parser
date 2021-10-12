@@ -70,6 +70,7 @@ schema = {
 * [anyOf schema](#anyof-schema)
 * [allOf schema](#allof-schema)
 * [Extend schema](#extend-schema)
+* [Switch syntax](#switch-syntax)
 * [Schema methods](#schema-methods)
   * [prop](#prop)
   * [props](#props)
@@ -595,6 +596,128 @@ schema = {
     maxLength: 20,
 }
 ```
+
+## Switch syntax
+
+This syntax useful in case when you write something like `{...} || {...} || {...}` but if validator found error then it throws tons of messages from each of that object. 
+To help validator to figure out which object is responsible for current data you can use next syntax
+
+```javascript
+schema = (
+    (
+        {action: 'create'} >>
+        {
+			name: string
+		}
+    )
+    ||
+    (
+        {action: 'update'} >>
+        {
+			id: int, 
+            name: string,
+        }
+    )
+    ||
+    (
+        {action: 'delete'} >>
+        {
+			id: int
+        }
+    )
+)
+```
+It will be converted to
+```javascript
+schema = {
+	if: {
+		type: 'object',
+        additionalProperties: true,
+        required: ['action'],
+        properties: {
+			action: {const: 'create'}
+        }
+    },
+    then: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['action', 'name'],
+        properties: {
+            action: {const: 'create'},
+            name: {type: 'string'},
+        }
+    },
+    else: {
+        if: {
+            type: 'object',
+            additionalProperties: true,
+            required: ['action'],
+            properties: {
+                action: {const: 'update'}
+            }
+        },
+        then: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['action', 'id', 'name'],
+            properties: {
+                action: {const: 'update'},
+                id: {type: 'integer'},
+                name: {type: 'string'},
+            }
+        },
+        else: {
+            if: {
+                type: 'object',
+                additionalProperties: true,
+                required: ['action'],
+                properties: {
+                    action: {const: 'delete'}
+                }
+            },
+            then: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['action', 'id'],
+                properties: {
+                    action: {const: 'delete'},
+                    id: {type: 'integer'},
+                }
+            },
+            else: {
+				oneOf: [
+                    {
+                        type: 'object',
+                        additionalProperties: true,
+                        required: ['action'],
+                        properties: {
+                            action: {const: 'create'}
+                        }
+                    },
+                    {
+                        type: 'object',
+                        additionalProperties: true,
+                        required: ['action'],
+                        properties: {
+                            action: {const: 'update'}
+                        }
+                    },
+                    {
+                        type: 'object',
+                        additionalProperties: true,
+                        required: ['action'],
+                        properties: {
+                            action: {const: 'delete'}
+                        }
+                    },
+                ]
+            }
+        }
+    }
+}
+```
+Notice `additionalProperties: true` in each `if:` it means we are validating only part of object and `additionalProperties: false` in `then:` with same properties from `if:` which means we are validating hole object.
+Also we need last `else: {oneOf: [...]}` to throw error that none of `if:` is not matched.
 
 ## Schema methods
 
