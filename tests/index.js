@@ -1084,6 +1084,10 @@ describe('parseSchema', function () {
 			(
 				{id: 2} >>
 				{title: !'two'}
+			) ||
+			(
+				{id: 3} >>
+				{title: !'three'}
 			)
 		));
 
@@ -1125,24 +1129,51 @@ describe('parseSchema', function () {
 					}
 				},
 				else: {
-					oneOf: [
-						{
-							type: 'object',
-							additionalProperties: true,
-							required: ['id'],
-							properties: {
-								id: {const: 1}
-							}
-						},
-						{
-							type: 'object',
-							additionalProperties: true,
-							required: ['id'],
-							properties: {
-								id: {const: 2}
-							}
+					if: {
+						type: 'object',
+						additionalProperties: true,
+						required: ['id'],
+						properties: {
+							id: {const: 3}
 						}
-					]
+					},
+					then: {
+						type: 'object',
+						required: ['id', 'title'],
+						additionalProperties: false,
+						properties: {
+							id: {const: 3},
+							title: {const: 'three'},
+						}
+					},
+					else: {
+						oneOf: [
+							{
+								type: 'object',
+								additionalProperties: true,
+								required: ['id'],
+								properties: {
+									id: {const: 1}
+								}
+							},
+							{
+								type: 'object',
+								additionalProperties: true,
+								required: ['id'],
+								properties: {
+									id: {const: 2}
+								}
+							},
+							{
+								type: 'object',
+								additionalProperties: true,
+								required: ['id'],
+								properties: {
+									id: {const: 3}
+								}
+							},
+						]
+					},
 				}
 			}
 		});

@@ -524,34 +524,51 @@ function astRightShiftToAjvSchema({left, right}, params) {
 }
 
 function astOrWithRightShiftToAjvSchema(root, params) {
-	const ifs = [];
+	const items = [];
 
 	const add = function ({left, right}) {
-		const ifThen = astRightShiftToAjvSchema(left, params);
+		if (t.isLogicalExpression(left)) {
+			add(left);
+		}
+		else {
+			items.push(left);
+		}
+
+		if (t.isLogicalExpression(right)) {
+			add(right);
+		}
+		else {
+			items.push(right);
+		}
+	};
+
+	add(root);
+
+	const ifs = [];
+	let topIfThen = null;
+	let parentIfThen;
+
+	for (const item of items) {
+		const ifThen = astRightShiftToAjvSchema(item, params);
 
 		ifs.push(getProp(ifThen, 'if').value);
 
-		let _else;
-
-		if (t.isLogicalExpression(right)) {
-			_else = add(right);
-		}
-		else {
-			_else = astRightShiftToAjvSchema(right, params);
-			ifs.push(getProp(_else, 'if').value);
-
-			const oneOf = toAst({oneOf: []});
-			oneOf.properties[0].value.elements = ifs;
-
-			addProp(_else, 'else', oneOf);
+		if (!topIfThen) {
+			topIfThen = ifThen;
 		}
 
-		addProp(ifThen, 'else', _else);
+		if (parentIfThen) {
+			addProp(parentIfThen, 'else', ifThen);
+		}
 
-		return ifThen;
-	};
+		parentIfThen = ifThen;
+	}
 
-	return add(root);
+	const oneOf = toAst({oneOf: []});
+	oneOf.properties[0].value.elements = ifs;
+	addProp(parentIfThen, 'else', oneOf);
+
+	return topIfThen;
 }
 
 function addDescription(root, target) {
