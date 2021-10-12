@@ -607,14 +607,14 @@ schema = (
     (
         {action: 'create'} >>
         {
-			name: string
-		}
+             name: string
+        }
     )
     ||
     (
         {action: 'update'} >>
         {
-			id: int, 
+            id: int, 
             name: string,
         }
     )
@@ -622,7 +622,7 @@ schema = (
     (
         {action: 'delete'} >>
         {
-			id: int
+            id: int
         }
     )
 )
@@ -630,12 +630,12 @@ schema = (
 It will be converted to
 ```javascript
 schema = {
-	if: {
-		type: 'object',
+    if: {
+        type: 'object',
         additionalProperties: true,
         required: ['action'],
         properties: {
-			action: {const: 'create'}
+            action: {const: 'create'}
         }
     },
     then: {
@@ -685,7 +685,7 @@ schema = {
                 }
             },
             else: {
-				oneOf: [
+                oneOf: [
                     {
                         type: 'object',
                         additionalProperties: true,
