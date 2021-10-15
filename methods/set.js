@@ -2,6 +2,7 @@ const t = require('@babel/types');
 const cloneDeep = require('lodash.clonedeep');
 const {getPropName, replaceProp} = require('../lib/object');
 const {method, objectOrTwo} = require('./utils');
+const {astToAjvSchema} = require("../index");
 
 module.exports = function set(schema, args, params = {}) {
 	const {methodName = 'set', clone = true, convertValue = false, valueType} = params;
@@ -28,7 +29,7 @@ module.exports = function set(schema, args, params = {}) {
 		schema = cloneDeep(schema);
 	}
 
-	args.forEach(function ([name, value]) {
+	for (let [name, value] of args) {
 		if (convertValue || t.isCallExpression(value)) {
 			if (typeof convertValue === 'function') {
 				value = convertValue(value, params);
@@ -49,7 +50,7 @@ module.exports = function set(schema, args, params = {}) {
 				value
 			)
 		);
-	});
+	}
 
 	return schema;
 };

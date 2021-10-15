@@ -9,6 +9,7 @@ const propertyNames = require('./propertyNames');
 const required = require('./required');
 const unevaluatedProperties = require('./unevaluatedProperties');
 const id = require('./id');
+const ref = require('./ref');
 
 module.exports = {
 	additionalProperties,
@@ -22,4 +23,5 @@ module.exports = {
 	required,
 	unevaluatedProperties,
 	id,
+	ref,
 };

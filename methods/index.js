@@ -45,6 +45,7 @@ const patternProperties = require('./object/patternProperties');
 const propertyNames = require('./object/propertyNames');
 const unevaluatedProperties = require('./object/unevaluatedProperties');
 const id = require('./object/id');
+const ref = require('./object/ref');
 
 module.exports = {
 	merge,
@@ -94,4 +95,5 @@ module.exports = {
 	propertyNames,
 	unevaluatedProperties,
 	id,
+	ref,
 };

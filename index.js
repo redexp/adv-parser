@@ -4,7 +4,7 @@ const cloneDeep = require('lodash.clonedeep');
 const toAst = require('./lib/toAst');
 const getObjectName = require('./lib/getObjectName');
 const defaultSchemas = require('./schemas');
-const {isPure, getProp, getPropName, prependProp, removeProp, addProp, replaceProp} = require('./lib/object');
+const {isPure, asPure, getProp, getPropName, prependProp, removeProp, addProp, replaceProp} = require('./lib/object');
 const defaultMethods = require('./methods');
 const defaultObjectMethods = require('./methods/object');
 
@@ -18,7 +18,6 @@ const astAnyOf = toAst(require('./schemas/anyOf'));
 const astAllOf = toAst(require('./schemas/allOf'));
 const astConst = toAst(require('./schemas/const'));
 
-const optionalPropName = /\?$/;
 const methodPropName = /^\$/;
 
 module.exports = parseSchema;
@@ -126,22 +125,15 @@ function astAssignToAjvSchema(root, params) {
 	addSchemaName(schema, name);
 	addDescription(root, schema);
 
-	schemas[name] = cloneDeep(schema);
+	schemas[name] = asPure(cloneDeep(schema));
 
 	return schema;
 }
 
 function astObjectToAjvSchema(root, params) {
 	const {objectOptions} = params;
-	const pure = isPure(root);
 
-	if (pure && root.properties.every(prop => !t.isSpreadElement(prop) && !isMethodProp(prop, objectOptions))) {
-		addDescription(root, root);
-		return root;
-	}
-
-	const type = pure && getProp(root, 'type');
-	const obj = pure ? t.objectExpression(type ? [cloneDeep(type)] : []) : cloneDeep(astObject);
+	const obj = cloneDeep(astObject);
 	var required = getProp(obj, 'required');
 	var properties = getProp(obj, 'properties');
 
@@ -180,8 +172,13 @@ function astObjectToAjvSchema(root, params) {
 			flush();
 
 			let src = prop.argument;
+			const pure = isPure(src);
 
-			defaultMethods[isPure(src) ? 'set' : 'merge'](obj, [src], {clone: false, ...params});
+			if (pure) {
+				prop.argument = src = src.argument.argument;
+			}
+
+			defaultMethods[pure ? 'set' : 'merge'](obj, [src], {clone: false, ...params});
 
 			restoreProps();
 
@@ -211,34 +208,20 @@ function astObjectToAjvSchema(root, params) {
 			}
 		}
 
-		if (pure) {
-			if (optional) {
-				throw new Error(`Invalid object key: You can't use "optional" properties in pure ajv validator`);
-			}
-
-			props.push(prop);
+		if (t.isIdentifier(value) && value.name === 'undefined') {
+			toggleRequired(name, false);
+			removeProp(properties.value, name);
+			continue;
 		}
-		else {
-			if (optionalPropName.test(name)) {
-				name = prop.key.value = name.replace(optionalPropName, '');
-				optional = true;
-			}
 
-			if (t.isIdentifier(value) && value.name === 'undefined') {
-				toggleRequired(name, false);
-				removeProp(properties.value, name);
-				continue;
-			}
+		toggleRequired(name, !optional);
 
-			toggleRequired(name, !optional);
+		prop.computed = false; // [key]: => key:
+		prop.value = astToAjvSchema(value, params);
 
-			prop.computed = false; // [key]: => key:
-			prop.value = astToAjvSchema(value, params);
+		addDescription(prop, prop.value);
 
-			addDescription(prop, prop.value);
-
-			replaceProp(properties.value, prop);
-		}
+		replaceProp(properties.value, prop);
 	}
 
 	flush();
@@ -497,17 +480,29 @@ function astArrowFunctionToAjvSchema(root, params) {
 }
 
 function astUnaryToAjvSchema(root, params) {
-	if (t.isArrayExpression(root.argument)) {
-		return astArrayToAjvSchema(root.argument, params, true);
-	}
+	if (isDoubleExclamation(root)) {
+		root = root.argument.argument;
 
-	return astToAjvSchema(root.argument, params);
+		if (t.isObjectExpression(root)) {
+			addDescription(root, root);
+			return root;
+		}
+		else if (t.isArrayExpression(root)) {
+			return astArrayToAjvSchema(root, params, true);
+		}
+		else {
+			throw new Error(`Unknown argument type for "!!" operator: ${JSON.stringify(root.type)}`);
+		}
+	}
+	else {
+		throw new Error(`Unknown operator "!"`);
+	}
 }
 
 function astRightShiftToAjvSchema({left, right}, params) {
 	const ifThen = t.objectExpression([]);
 
-	const _if = astToAjvSchema(left, params);
+	const _if = astToAjvSchema(cloneDeep(left), params);
 	getProp(_if, 'additionalProperties').value.value = true;
 
 	let _then = t.objectExpression([
@@ -667,5 +662,14 @@ function isRightShiftWithObjects(root) {
 	return (
 		t.isBinaryExpression(root) &&
 		root.operator === '>>'
+	);
+}
+
+function isDoubleExclamation(node) {
+	return (
+		t.isUnaryExpression(node) &&
+		node.operator === '!' &&
+		t.isUnaryExpression(node.argument) &&
+		node.argument.operator === '!'
 	);
 }

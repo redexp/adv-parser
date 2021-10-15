@@ -1,6 +1,6 @@
 {
   "name": "adv-parser",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "ADV parser",
   "main": "index.js",
   "types": "index.d.ts",
@@ -39,6 +39,6 @@
     "ajv": "^8.6.3",
     "ajv-formats": "^2.1.1",
     "chai": "^4.3.4",
-    "mocha": "^9.1.2"
+    "mocha": "^9.1.3"
   }
 }

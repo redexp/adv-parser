@@ -28,7 +28,7 @@ describe('parseSchema', function () {
 				constBoolean: true,
 				[optional]: string,
 				listInt: [int],
-				listStr: [{
+				listStr: [!!{
 					type: 'string'
 				}],
 				listObj: [{
@@ -412,8 +412,8 @@ describe('parseSchema', function () {
 		parser(`One = {test1: string, field: string}`);
 		parser(`Two = {test1: number, name: string}`);
 		parser(`Three = {test3: string, [test4]: string, [wasReq]: string, [wasOpt]: string}`);
-		parser(`Four = {type: "object", testOption1: "test1", testOption2: "test2"}`);
-		parser(`Five = {type: "object", testOption1: "testA", testOption3: "test3", properties: {test5: {type: "string"}}}`);
+		parser(`Four = !!{type: "object", testOption1: "test1", testOption2: "test2"}`);
+		parser(`Five = !!{type: "object", testOption1: "testA", testOption3: "test3", properties: {test5: {type: "string"}}}`);
 
 		var res = parser(`{
 			id: number,
@@ -472,7 +472,7 @@ describe('parseSchema', function () {
 		const s = {...defaultSchemas};
 
 		var schema1 = getAstSchema(`{id: Test}`, {schemas: s});
-		var schema2 = getAstSchema(`Test = {type: "number"}`, {schemas: s});
+		var schema2 = getAstSchema(`Test = !!{type: "number"}`, {schemas: s});
 
 		var res = generateAjvSchema(schema1, {schemas: s});
 
@@ -496,154 +496,8 @@ describe('parseSchema', function () {
 		});
 	});
 
-	it('extend {...{},}', function () {
-		var schema = parser(`
-			{
-				...{
-					name: string,
-				},
-				type: "object",
-				additionalProperties: true,
-			}
-		`);
-
-		expect(schema).to.eql({
-			type: 'object',
-			additionalProperties: true,
-			required: ['name'],
-			properties: {
-				name: {
-					type: 'string'
-				}
-			}
-		});
-
-		schema = parser(`
-			{
-				type: "object",
-				additionalProperties: true,
-				extra: "test",
-				...{
-					name: string,
-				},
-			}
-		`);
-
-		expect(schema).to.eql({
-			type: 'object',
-			additionalProperties: false,
-			extra: "test",
-			required: ['name'],
-			properties: {
-				name: {
-					type: 'string'
-				}
-			}
-		});
-
-		schema = parser(`
-			{
-				type: "object",
-				...{
-					name: string,
-				},
-				additionalProperties: true,
-				...{
-					id: number,
-					name: number,
-					test: string,
-				},
-				required: ['id', 'name'],
-			}
-		`);
-
-		expect(schema).to.eql({
-			type: 'object',
-			additionalProperties: false,
-			required: ['id', 'name'],
-			properties: {
-				id: {
-					type: 'number'
-				},
-				name: {
-					type: 'number'
-				},
-				test: {
-					type: 'string'
-				}
-			}
-		});
-
-		schema = parser(`
-			{
-				...string,
-				type: "string",
-				extra: 'test',
-			}
-		`);
-
-		expect(schema).to.eql({
-			type: 'string',
-			extra: 'test',
-		});
-
-		parser(`File = {id: id, name: string, path: string}`);
-
-		schema = parser(`
-			{
-				...File,
-				id: undefined,
-				...{
-					type: 'object',
-					required: ['name']
-				},
-			}
-		`);
-
-		expect(schema).to.eql({
-			type: 'object',
-			additionalProperties: false,
-			required: ['name'],
-			properties: {
-				name: {
-					type: 'string'
-				},
-				path: {
-					type: 'string'
-				}
-			}
-		});
-
-		schema = parser(`
-			{
-				...File,
-				
-				type: 'object',
-				required: ['name'],
-			}
-		`);
-
-		expect(schema).to.eql({
-			type: 'object',
-			additionalProperties: false,
-			required: ['name'],
-			properties: {
-				id: {
-					type: 'integer',
-					minimum: 1,
-				},
-				name: {
-					type: 'string'
-				},
-				path: {
-					type: 'string'
-				}
-			}
-		});
-	});
-
 	it('Schema methods', function () {
-		parser(`User = {id: number, 'name?': string, [age]: number}`);
+		parser(`User = {id: number, [name]: string, [age]: number}`);
 		parser(`Test1 = User.pick('id', 'name')`);
 		parser(`Test2 = User.remove('id', 'name')`);
 		parser(`Test3 = User.add({token: uuid})`);
@@ -654,7 +508,7 @@ describe('parseSchema', function () {
 		parser(`Test8 = User.set('additionalProperties', true)`);
 		parser(`Test9 = {uuid: User.prop('name')}`);
 		parser(`Test10 = /d+/.set('minLength', 10)`);
-		parser(`Test11 = {type: 'string'}.set('minLength', 10)`);
+		parser(`Test11 = (!!{type: 'string'}).set('minLength', 10)`);
 		parser(`Test12 = number.not({minimum: 10})`);
 		parser(`Total = User
 			.pick('id', 'name')
@@ -672,20 +526,17 @@ describe('parseSchema', function () {
 		var g = generateAjvSchema;
 		var p = parser;
 
-		expect(g(c.Test1)).to.eql(p(`Test1 = {id: number, 'name?': string}`));
+		expect(g(c.Test1)).to.eql(p(`Test1 = {id: number, [name]: string}`));
 		expect(g(c.Test2)).to.eql(p(`Test2 = {[age]: number}`));
-		expect(g(c.Test3)).to.eql(p(`Test3 = {id: number, 'name?': string, [age]: number, token: uuid}`));
+		expect(g(c.Test3)).to.eql(p(`Test3 = {id: number, [name]: string, [age]: number, token: uuid}`));
 		expect(g(c.Test4)).to.eql(p(`Test4 = {id: number, name: string, [age]: number}`));
 		expect(g(c.Test5)).to.eql(p(`Test5 = {[id]: number, [name]: string, [age]: number}`));
 		expect(g(c.Test6)).to.eql(p(`Test6 = {id: number, [name]: string, [age]: number}`));
 		expect(g(c.Test7)).to.eql(p(`Test7 = number`));
-		expect(g(c.Test8)).to.eql(p(`Test8 = {id: number, [name]: string, [age]: number, ...{type: 'object', additionalProperties: true}}`));
 		expect(g(c.Test9)).to.eql(p(`Test9 = {uuid: string}`));
-		expect(g(c.Test10)).to.eql(p(`Test10 = {type: 'string', pattern: "d+", minLength: 10}`));
-		expect(g(c.Test11)).to.eql(p(`Test11 = {type: 'string', 'minLength': 10}`));
-		expect(g(c.Test12)).to.eql(p(`Test12 = {type: 'number', not: {minimum: 10}}`));
-		expect(g(c.Total)).to.eql(p(`Total = {name: string, [token]: uuid, ...{type: 'object', additionalProperties: true}}`));
-
+		expect(g(c.Test10)).to.eql(p(`Test10 = !!{type: 'string', pattern: "d+", minLength: 10}`));
+		expect(g(c.Test11)).to.eql(p(`Test11 = !!{type: 'string', 'minLength': 10}`));
+		expect(g(c.Test12)).to.eql(p(`Test12 = !!{type: 'number', not: {minimum: 10}}`));
 	});
 
 	it('Object schema $ props', function () {
@@ -723,13 +574,21 @@ describe('parseSchema', function () {
 
 		const set = require('../methods/set');
 
-		expect(originParser(`{type: 'string', $test: 1}`, {
+		expect(originParser(`{test: 'one', $test: 1}`, {
 			objectOptions: {
 				test: function (schema, args, params) {
 					return set(schema, ['success', args[0]], params);
 				}
 			}
-		})).to.eql({type: 'string', success: 1});
+		})).to.eql({
+			type: 'object',
+			additionalProperties: false,
+			required: ['test'],
+			properties: {
+				test: {const: 'one'}
+			},
+			success: 1,
+		});
 	});
 
 	it('array contains syntax', function () {
@@ -738,7 +597,7 @@ describe('parseSchema', function () {
 			type: 'array',
 			items: {type: 'number'},
 		});
-		expect(p(`![number]`)).to.eql({
+		expect(p(`!![number]`)).to.eql({
 			type: 'array',
 			items: {type: 'number'},
 			minItems: 1,
@@ -751,7 +610,7 @@ describe('parseSchema', function () {
 				{type: 'string'},
 			],
 		});
-		expect(p(`![number, string]`)).to.eql({
+		expect(p(`!![number, string]`)).to.eql({
 			type: 'array',
 			items: [
 				{type: 'number'},
@@ -831,7 +690,7 @@ describe('parseSchema', function () {
 		expect(p(`[]`)).to.eql({
 			type: 'array',
 		});
-		expect(p(`![]`)).to.eql({
+		expect(p(`!![]`)).to.eql({
 			type: 'array',
 			minItems: 0,
 			maxItems: 0,
@@ -885,7 +744,7 @@ describe('parseSchema', function () {
 	});
 
 	it('type as string const', function () {
-		var res = parser(Test => ({type: !"test"}));
+		var res = parser(Test => ({type: "test"}));
 
 		expect(res).to.eql({
 			title: 'Test',
@@ -969,7 +828,7 @@ describe('parseSchema', function () {
 	});
 
 	it('$ref', function () {
-		var res = parser(Test => ({test: {$ref: "asd"}}));
+		var res = parser(Test => ({test: !!{$ref: "asd"}}));
 
 		expect(res).to.eql({
 			title: 'Test',
@@ -981,6 +840,19 @@ describe('parseSchema', function () {
 					$ref: "asd"
 				}
 			},
+		});
+
+		res = parser(Test2 => ({test: 1, $ref: 'one'}));
+
+		expect(res).to.eql({
+			title: 'Test2',
+			type: 'object',
+			required: ['test'],
+			additionalProperties: false,
+			properties: {
+				test: {const: 1},
+			},
+			$ref: 'one',
 		});
 	});
 
@@ -1079,15 +951,15 @@ describe('parseSchema', function () {
 		var res = parser(Test => (
 			(
 				{id: 1} >>
-				{title: !'one'}
+				{title: 'one'}
 			) ||
 			(
 				{id: 2} >>
-				{title: !'two'}
+				{title: 'two'}
 			) ||
 			(
 				{id: 3} >>
-				{title: !'three'}
+				{title: 'three'}
 			)
 		));
 
@@ -1176,6 +1048,69 @@ describe('parseSchema', function () {
 					},
 				}
 			}
+		});
+	});
+
+	it('!!{}', function () {
+		var res = parser(Test1 => (
+			{
+				...!!{
+					additionalProperties: true,
+					test: 2,
+				},
+
+				test: 1,
+			}
+		));
+
+		expect(res).to.eql({
+			title: 'Test1',
+			type: 'object',
+			additionalProperties: true,
+			required: ['test'],
+			properties: {
+				test: {const: 1},
+			},
+			test: 2,
+		});
+
+		res = parser(Test2 => (
+			{
+				...!!{
+					additionalProperties: true,
+					test: 2,
+					test3: 5,
+					required: ['id'],
+					properties: {
+						id: {const: 3}
+					},
+				},
+				...!!{
+					additionalProperties: false,
+					test: 3,
+					test2: 4,
+					required: ['name'],
+					properties: {
+						name: {const: 2}
+					},
+				},
+
+				test: 1,
+			}
+		));
+
+		expect(res).to.eql({
+			title: 'Test2',
+			type: 'object',
+			additionalProperties: false,
+			required: ['name', 'test'],
+			properties: {
+				test: {const: 1},
+				name: {const: 2},
+			},
+			test: 3,
+			test2: 4,
+			test3: 5,
 		});
 	});
 });
@@ -1726,7 +1661,7 @@ describe('methods', function () {
 			});
 
 			expect(p(`
-			[{$ref: "asd"}].id("qwe")
+			[!!{$ref: "asd"}].id("qwe")
 			`)).to.eql({
 				$id: 'qwe',
 				type: 'array',

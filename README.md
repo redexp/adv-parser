@@ -71,6 +71,7 @@ schema = {
 * [allOf schema](#allof-schema)
 * [Extend schema](#extend-schema)
 * [Switch syntax](#switch-syntax)
+* [Pure syntax](#pure-syntax)
 * [Schema methods](#schema-methods)
   * [prop](#prop)
   * [props](#props)
@@ -221,7 +222,6 @@ By default, all fields in an object are required. To make field optional just pu
 schema = {
     id: number,
     [name]: string,
-    'age?': number,
 }
 
 schema == {
@@ -231,7 +231,6 @@ schema == {
     properties: {
         id: {type: "number"},
         name: {type: "string"},
-        age: {type: "number"},
     },
 }
 ```
@@ -349,7 +348,7 @@ Instead of short `number` validator you can use one of following number patterns
 * `int` number without floating-point
 * `positive` positive number including `0`
 * `negative` negative number excluding `0`
-* `id` number more than `0`
+* `id` integer more than `0`
 
 ```javascript
 schema = {
@@ -364,7 +363,7 @@ schema == {
     required: ['id', 'price', 'list'],
     properties: {
         id: {
-            type: "number",
+            type: "integer",
             minimum: 1,
         },
         price: {
@@ -718,6 +717,26 @@ schema = {
 ```
 Notice `additionalProperties: true` in each `if:` it means we are validating only part of object and `additionalProperties: false` in `then:` with same properties from `if:` which means we are validating hole object.
 Also we need last `else: {oneOf: [...]}` to throw error that none of `if:` is not matched.
+
+## Pure syntax
+
+If you want to write pure json schema than use `!!` operator
+```javascript
+schema = {
+    id: !!{type: 'number'}
+}
+```
+
+```javascript
+schema = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['id'],
+    properties: {
+        id: {type: 'number'}
+    },
+}
+```
 
 ## Schema methods
 

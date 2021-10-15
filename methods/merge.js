@@ -12,8 +12,9 @@ module.exports = function merge(target, schemas, params = {}) {
 
 	const {astToAjvSchema} = require('../index');
 
-	var mainType = getPropStringValue(target, 'type');
-	var isObject = mainType === 'object';
+	const mainType = getPropStringValue(target, 'type');
+	const isObject = mainType === 'object';
+
 	var required = getProp(target, 'required');
 	var properties = getProp(target, 'properties');
 
@@ -31,10 +32,10 @@ module.exports = function merge(target, schemas, params = {}) {
 		properties = properties ? indexBy(properties.value.properties, getPropName) : {};
 	}
 
-	schemas.forEach(function (schema) {
+	for (let schema of schemas) {
 		schema = astToAjvSchema(schema, params);
 
-		var type = getPropStringValue(schema, 'type');
+		let type = getPropStringValue(schema, 'type');
 
 		if (type !== mainType) {
 			throw new Error(`You can extend only same type schemas: ${mainType} and ${type}`);
@@ -47,14 +48,14 @@ module.exports = function merge(target, schemas, params = {}) {
 			req = req ? indexBy(req.value.elements, s => s.value) : {};
 			props = props ? props.value.properties : [];
 
-			props.forEach(function (prop) {
-				var {value} = prop;
-				var name = getPropName(prop);
+			for (const prop of props) {
+				const {value} = prop;
+				const name = getPropName(prop);
 
 				if (t.isIdentifier(value) && value.name === 'undefined') {
 					remove(required, name);
 					delete properties[name];
-					return;
+					continue;
 				}
 
 				if (req.hasOwnProperty(name)) {
@@ -65,11 +66,11 @@ module.exports = function merge(target, schemas, params = {}) {
 				}
 
 				properties[name] = prop;
-			});
+			}
 		}
 
-		schema.properties.forEach(function (prop) {
-			var name = getPropName(prop);
+		for (const prop of schema.properties) {
+			const name = getPropName(prop);
 
 			if (
 				name === 'title' ||
@@ -78,12 +79,12 @@ module.exports = function merge(target, schemas, params = {}) {
 					(name === 'required' || name === 'properties')
 				)
 			) {
-				return;
+				continue;
 			}
 
 			replaceProp(target, prop);
-		});
-	});
+		}
+	}
 
 	if (isObject) {
 		replaceProp(

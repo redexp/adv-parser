@@ -1,3 +1,4 @@
+const {asPure} = require('../lib/object');
 const toAst = require('../lib/toAst');
 const dt = require('./date-time');
 const dtt = require('./date-time-tz');
@@ -42,8 +43,8 @@ var schemas = {
 	uuid: require('./uuid'),
 };
 
-for (var name in schemas) {
-	schemas[name] = toAst(schemas[name]);
+for (const name in schemas) {
+	schemas[name] = asPure(toAst(schemas[name]));
 }
 
 module.exports = schemas;

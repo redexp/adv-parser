@@ -61,7 +61,9 @@ function isArray(schema) {
 
 function argType(num, value, type) {
 	if (Array.isArray(type)) {
-		type.forEach(type => argType(num, value, type));
+		for (const _type of type) {
+			argType(num, value, _type);
+		}
 		return;
 	}
 
@@ -167,9 +169,9 @@ function objectOrTwo(args) {
 }
 
 function onlyStrings(args) {
-	args.forEach(function (s) {
+	for (const s of args) {
 		if (!t.isStringLiteral(s)) {
 			throw new Error(`Method "${curMethodName}" accept only strings`);
 		}
-	});
+	}
 }

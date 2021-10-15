@@ -16,11 +16,11 @@ module.exports = function required(schema, args, {methodName = 'required', add =
 				throw new Error(`Method "${methodName}" required array`);
 			}
 
-			value.elements.forEach(function (item) {
+			for (const item of value.elements) {
 				if (!t.isStringLiteral(item)) {
 					throw new Error(`Method "${methodName}" required array of strings`);
 				}
-			});
+			}
 		}
 
 		return set(schema, ['required', args[0]], {methodName, valueType, clone});
@@ -38,14 +38,14 @@ module.exports = function required(schema, args, {methodName = 'required', add =
 
 	required = required ? required.value.elements.map(s => s.value) : [];
 
-	args.forEach(function (name) {
+	for (const name of args) {
 		if (add) {
 			push(required, name);
 		}
 		else {
 			remove(required, name);
 		}
-	});
+	}
 
 	replaceProp(
 		schema,
