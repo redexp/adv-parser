@@ -720,10 +720,16 @@ Also we need last `else: {oneOf: [...]}` to throw error that none of `if:` is no
 
 ## Pure syntax
 
-If you want to write pure json schema than use `!!` operator
+If you want to write pure json schema than use `!!` operator (all included schemas will be converted).
 ```javascript
 schema = {
-    id: !!{type: 'number'}
+    id: !!{type: 'number'},
+    data: !!{
+        type: 'object',
+        properties: {
+            name: string.minLength(1),
+        },
+    },
 }
 ```
 
@@ -731,10 +737,43 @@ schema = {
 schema = {
     type: 'object',
     additionalProperties: false,
+    required: ['id', 'data'],
+    properties: {
+        id: {type: 'number'},
+        data: {
+            type: 'object',
+            properties: {
+                name: {
+                    type: 'string',
+                    minLength: 1,
+                },
+            },
+        },  
+    },
+}
+```
+
+You can mix pure syntax inside regular syntax
+```javascript
+schema = {
+    id: int,
+
+    ...!!{
+        additionalProperties: true,
+        someOtherOption: true,
+    },
+}
+```
+
+```javascript
+schema = {
+    type: 'object',
+    additionalProperties: true,
     required: ['id'],
     properties: {
-        id: {type: 'number'}
+        id: {type: 'integer'}
     },
+    someOtherOption: true,
 }
 ```
 

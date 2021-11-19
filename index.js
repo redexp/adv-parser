@@ -84,7 +84,7 @@ function astToAjvSchema(root, params) {
 	else if (isRightShiftWithObjects(root)) {
 		return astRightShiftToAjvSchema(root, params);
 	}
-	else if (t.isIdentifier(root) || t.isMemberExpression(root) || t.isBinaryExpression(root) || t.isNullLiteral(root)) {
+	else if (isObjectName(root) || t.isNullLiteral(root)) {
 		return astObjectNameToAjvSchema(root, params);
 	}
 	else if (t.isObjectExpression(root)) {
@@ -484,6 +484,7 @@ function astUnaryToAjvSchema(root, params) {
 		root = root.argument.argument;
 
 		if (t.isObjectExpression(root)) {
+			replaceIdentifiers(root, params);
 			addDescription(root, root);
 			return root;
 		}
@@ -582,6 +583,21 @@ function addDescription(root, target) {
 	}
 }
 
+function replaceIdentifiers(root, params) {
+	if (t.isObjectExpression(root)) {
+		for (const prop of root.properties) {
+			if (isObjectName(prop.value)) {
+				prop.value = astObjectNameToAjvSchema(prop.value, params);
+			}
+			else {
+				replaceIdentifiers(prop.value, params);
+			}
+		}
+	}
+
+	return root;
+}
+
 function replaceObjectKeysWithString(root) {
 	if (t.isObjectExpression(root)) {
 		for (let prop of root.properties) {
@@ -652,10 +668,8 @@ function addSchemaName(root, name) {
 	);
 }
 
-function isMethodProp(prop, objectOptions) {
-	let name = getPropName(prop);
-
-	return methodPropName.test(name) && objectOptions.hasOwnProperty(name.slice(1));
+function isObjectName(root) {
+	return t.isIdentifier(root) || t.isMemberExpression(root) || t.isBinaryExpression(root);
 }
 
 function isRightShiftWithObjects(root) {

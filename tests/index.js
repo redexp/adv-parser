@@ -1051,7 +1051,7 @@ describe('parseSchema', function () {
 		});
 	});
 
-	it('!!{}', function () {
+	it('pure syntax', function () {
 		var res = parser(Test1 => (
 			{
 				...!!{
@@ -1111,6 +1111,27 @@ describe('parseSchema', function () {
 			test: 3,
 			test2: 4,
 			test3: 5,
+		});
+
+		res = parser(Test3 => (!!{
+			type: 'string',
+			test: string,
+			deep: {
+				test: {
+					value: int
+				}
+			}
+		}));
+
+		expect(res).to.eql({
+			title: 'Test3',
+			type: 'string',
+			test: {type: 'string'},
+			deep: {
+				test: {
+					value: {type: 'integer'}
+				}
+			}
 		});
 	});
 });
