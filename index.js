@@ -49,6 +49,7 @@ function generateAjvSchema(ast, {
 		schemaVersion,
 	});
 
+	addDescription(ast, schema);
 	replaceObjectKeysWithString(schema);
 	replaceComments(schema);
 
@@ -219,7 +220,29 @@ function astObjectToAjvSchema(root, params) {
 		prop.computed = false; // [key]: => key:
 		prop.value = astToAjvSchema(value, params);
 
-		addDescription(prop, prop.value);
+		const {leadingComments} = prop;
+
+		if (
+			leadingComments &&
+			leadingComments.length > 0
+		) {
+			const index = root.properties.indexOf(prop);
+			const prev = index > 0 && root.properties[index - 1];
+
+			if (
+				prev &&
+				prev.loc.end.line === leadingComments[0].loc.start.line
+			) {
+				addDescription(leadingComments[0], prev.value);
+
+				if (leadingComments.length > 1) {
+					addDescription(prop.leadingComments.slice(1), prop.value);
+				}
+			}
+			else {
+				addDescription(prop, prop.value);
+			}
+		}
 
 		replaceProp(properties.value, prop);
 	}
@@ -485,7 +508,6 @@ function astUnaryToAjvSchema(root, params) {
 
 		if (t.isObjectExpression(root)) {
 			replaceIdentifiers(root, params);
-			addDescription(root, root);
 			return root;
 		}
 		else if (t.isArrayExpression(root)) {
@@ -568,19 +590,27 @@ function astOrWithRightShiftToAjvSchema(root, params) {
 }
 
 function addDescription(root, target) {
-	let comments = root.leadingComments || root.trailingComments;
+	const comments = (
+		Array.isArray(root) ?
+			root :
+		root.type === 'CommentLine' ?
+			[root]:
+			(root.leadingComments || root.trailingComments)
+	);
 
-	if (comments && comments.length > 0 && !getProp(target, 'description')) {
-		prependProp(
-			target,
-			t.objectProperty(
-				t.identifier('description'),
-				t.stringLiteral(
-					comments.map(c => c.value.trim()).join('\n')
-				)
-			)
-		);
+	if (!comments || comments.length === 0 || getProp(target, 'description')) {
+		return;
 	}
+
+	prependProp(
+		target,
+		t.objectProperty(
+			t.identifier('description'),
+			t.stringLiteral(
+				comments.map(c => c.value.trim()).join('\n')
+			)
+		)
+	);
 }
 
 function replaceIdentifiers(root, params) {

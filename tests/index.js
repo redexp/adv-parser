@@ -1134,6 +1134,93 @@ describe('parseSchema', function () {
 			}
 		});
 	});
+
+	it('description', function () {
+		var res = parser(`
+			# main desc
+			{
+				// id desc
+				id: 1,
+				test1: 2, // test desc
+				// desc 3
+				test2: 3, // omit desc 1
+				// omit desc 2
+			}
+		`);
+
+		expect(res).to.eql({
+			description: 'main desc',
+			type: 'object',
+			additionalProperties: false,
+			required: ['id', 'test1', 'test2'],
+			properties: {
+				id: {
+					description: 'id desc',
+					const: 1,
+				},
+				test1: {
+					description: 'test desc',
+					const: 2,
+				},
+				test2: {
+					description: 'desc 3',
+					const: 3,
+				},
+			},
+		});
+
+		res = parser(`
+			# test desc1
+			Test1 = {id: 1}
+		`);
+
+		expect(res).to.eql({
+			title: 'Test1',
+			description: 'test desc1',
+			type: 'object',
+			additionalProperties: false,
+			required: ['id'],
+			properties: {
+				id: {const: 1},
+			},
+		});
+
+		res = parser(`
+			// test desc2
+			Test2 = {id: 1}
+		`);
+
+		expect(res).to.eql({
+			title: 'Test2',
+			description: 'test desc2',
+			type: 'object',
+			additionalProperties: false,
+			required: ['id'],
+			properties: {
+				id: {const: 1},
+			},
+		});
+
+		res = parser(`
+			# test desc2
+			!!{id: 1}
+		`);
+
+		expect(res).to.eql({
+			description: 'test desc2',
+			id: 1,
+		});
+
+		res = parser(`
+			// test desc 3
+			string
+		`);
+
+		expect(res).to.eql({
+			description: 'test desc 3',
+			type: 'string',
+		});
+	});
 });
 
 describe('schemas', function () {
