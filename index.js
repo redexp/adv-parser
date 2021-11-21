@@ -220,16 +220,16 @@ function astObjectToAjvSchema(root, params) {
 		prop.computed = false; // [key]: => key:
 		prop.value = astToAjvSchema(value, params);
 
-		const {leadingComments} = prop;
-
 		if (
-			leadingComments &&
-			leadingComments.length > 0
+			prop.leadingComments ||
+			prop.trailingComments
 		) {
+			const {leadingComments} = prop;
 			const index = root.properties.indexOf(prop);
 			const prev = index > 0 && root.properties[index - 1];
 
 			if (
+				leadingComments &&
 				prev &&
 				prev.loc.end.line === leadingComments[0].loc.start.line
 			) {
@@ -237,6 +237,9 @@ function astObjectToAjvSchema(root, params) {
 
 				if (leadingComments.length > 1) {
 					addDescription(prop.leadingComments.slice(1), prop.value);
+				}
+				else if (prop.trailingComments) {
+					addDescription(prop.trailingComments, prop.value);
 				}
 			}
 			else {

@@ -1139,12 +1139,12 @@ describe('parseSchema', function () {
 		var res = parser(`
 			# main desc
 			{
-				// id desc
-				id: 1,
-				test1: 2, // test desc
+				// desc 1
+				test1: 1,
+				test2: 2, // desc 2
 				// desc 3
-				test2: 3, // omit desc 1
-				// omit desc 2
+				test3: 3, // omit desc
+				test4: 4, // desc 4
 			}
 		`);
 
@@ -1152,19 +1152,23 @@ describe('parseSchema', function () {
 			description: 'main desc',
 			type: 'object',
 			additionalProperties: false,
-			required: ['id', 'test1', 'test2'],
+			required: ['test1', 'test2', 'test3', 'test4'],
 			properties: {
-				id: {
-					description: 'id desc',
+				test1: {
+					description: 'desc 1',
 					const: 1,
 				},
-				test1: {
-					description: 'test desc',
+				test2: {
+					description: 'desc 2',
 					const: 2,
 				},
-				test2: {
+				test3: {
 					description: 'desc 3',
 					const: 3,
+				},
+				test4: {
+					description: 'desc 4',
+					const: 4,
 				},
 			},
 		});
