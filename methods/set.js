@@ -2,7 +2,6 @@ const t = require('@babel/types');
 const cloneDeep = require('lodash.clonedeep');
 const {getPropName, replaceProp} = require('../lib/object');
 const {method, objectOrTwo} = require('./utils');
-const {astToAjvSchema} = require("../index");
 
 module.exports = function set(schema, args, params = {}) {
 	const {methodName = 'set', clone = true, convertValue = false, valueType} = params;

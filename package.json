@@ -1,6 +1,6 @@
 {
   "name": "adv-parser",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "ADV parser",
   "main": "index.js",
   "types": "index.d.ts",
@@ -36,7 +36,7 @@
     "lodash.keyby": "^4.6.0"
   },
   "devDependencies": {
-    "ajv": "^8.8.1",
+    "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "chai": "^4.3.4",
     "mocha": "^9.1.3"
