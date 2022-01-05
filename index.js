@@ -59,8 +59,27 @@ function generateAjvSchema(ast, {
 function getAstSchema(code, {schemas} = {}) {
 	const schema = toAst(code);
 
-	if (schemas && t.isAssignmentExpression(schema)) {
-		let {left, right} = schema;
+	if (!schemas) return schema;
+
+	let left;
+	let right;
+
+	if (t.isAssignmentExpression(schema)) {
+		left = schema.left;
+		right = schema.right;
+	}
+	else if (t.isArrowFunctionExpression(schema)) {
+		if (schema.params.length > 0) {
+			left = schema.params[0];
+			right = schema.body;
+		}
+		else if (t.isAssignmentExpression(schema.body)) {
+			left = schema.body.left;
+			right = schema.body.right;
+		}
+	}
+
+	if (left && right) {
 		const name = getObjectName(left);
 
 		schemas[name] = right;
@@ -324,8 +343,8 @@ function astArrayToAjvSchema(root, params, exact) {
 			v2020 ? 'prefixItems' : 'items',
 			t.arrayExpression(
 				elements
-					.filter(el => !t.isSpreadElement(el))
-					.map(el => astToAjvSchema(el, params))
+				.filter(el => !t.isSpreadElement(el))
+				.map(el => astToAjvSchema(el, params))
 			)
 		);
 

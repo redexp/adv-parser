@@ -724,11 +724,11 @@ describe('parseSchema', function () {
 			},
 		});
 
-		res = parser(() => Test = {...User, test: number});
+		res = parser(() => Test.Schema = {...User, test: number});
 
 		expect(schemas).to.have.property('User');
 		expect(res).to.eql({
-			title: 'Test',
+			title: 'Test.Schema',
 			type: 'object',
 			additionalProperties: false,
 			required: ['test'],
@@ -739,6 +739,20 @@ describe('parseSchema', function () {
 				test: {
 					type: 'number'
 				},
+			},
+		});
+
+		res = parser((Test2) => Test.Schema.omit('test'));
+
+		expect(res).to.eql({
+			title: 'Test2',
+			type: 'object',
+			additionalProperties: false,
+			required: [],
+			properties: {
+				name: {
+					type: 'string'
+				}
 			},
 		});
 	});
