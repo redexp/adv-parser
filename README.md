@@ -809,14 +809,14 @@ schema == {
 
 Alias: `pick`
 
-Return "object" schema of props
+Returns "object" schema of props
 
 ```js
-schema = User.props('id', 'name')
+schema = User.props('id', {name: 'full_name'})
  
 schema == {
     id: number,
-    [name]: string,
+    [full_name]: string,
 }
 ```
 

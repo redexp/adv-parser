@@ -1,14 +1,32 @@
 const cloneDeep = require('lodash.clonedeep');
-const {method, isObject, atLeastOne, onlyStrings} = require('../utils');
+const t = require('@babel/types');
+const {method, isObject, atLeastOne} = require('../utils');
 const {getProp, getPropName, replaceProp} = require('../../lib/object');
 
 module.exports = function props(schema, args, {methodName = 'props'} = {}) {
 	method(methodName);
 	isObject(schema);
 	atLeastOne(args);
-	onlyStrings(args);
 
-	args = args.map(s => s.value);
+	const map = {};
+
+	for (const prop of args) {
+		if (t.isStringLiteral(prop)) {
+			map[prop.value] = prop.value;
+		}
+		else if (t.isObjectExpression(prop)) {
+			for (const item of prop.properties) {
+				if (!t.isStringLiteral(item.value)) {
+					throw new Error(`Method "${methodName}" accept only strings or key/string objects`);
+				}
+
+				map[item.key.name || item.key.value] = item.value.value;
+			}
+		}
+		else {
+			throw new Error(`Method "${methodName}" accept only strings or key/string objects`);
+		}
+	}
 
 	var required = getProp(schema, 'required');
 	var properties = getProp(schema, 'properties');
@@ -21,23 +39,46 @@ module.exports = function props(schema, args, {methodName = 'props'} = {}) {
 	});
 
 	if (required) {
-		required = {...required};
+		const props = [];
 
-		required.value.elements = required.value.elements.filter(function (item) {
-			return args.includes(item.value);
+		for (const prop of required.value.elements) {
+			const name = prop.value;
+
+			if (!map.hasOwnProperty(name)) continue;
+
+			props.push(t.stringLiteral(map[name]));
+		}
+
+		replaceProp(schema, {
+			...required,
+			value: t.arrayExpression(props),
 		});
-
-		replaceProp(schema, required);
 	}
 
 	if (properties) {
-		properties = {...properties};
+		const props = [];
 
-		properties.value.properties = properties.value.properties.filter(function (prop) {
-			return args.includes(getPropName(prop));
+		for (let prop of properties.value.properties) {
+			const name = getPropName(prop);
+
+			if (!map.hasOwnProperty(name)) continue;
+
+			const alias = map[name];
+
+			if (name !== alias) {
+				prop = {
+					...prop,
+					key: t.stringLiteral(alias),
+				};
+			}
+
+			props.push(prop);
+		}
+
+		replaceProp(schema, {
+			...properties,
+			value: t.objectExpression(props),
 		});
-
-		replaceProp(schema, properties);
 	}
 
 	return schema;
