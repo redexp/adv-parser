@@ -116,7 +116,7 @@ function astToAjvSchema(root, params) {
 	else if (t.isLogicalExpression(root)) {
 		return astEnumToAjvSchema(root, params);
 	}
-	else if (t.isNumericLiteral(root) || t.isStringLiteral(root) || t.isBooleanLiteral(root)) {
+	else if (isNumber(root) || t.isStringLiteral(root) || t.isBooleanLiteral(root)) {
 		return astValueLiteralToAjvSchema(root, params);
 	}
 	else if (t.isRegExpLiteral(root)) {
@@ -388,7 +388,7 @@ function astEnumToAjvSchema(root, params) {
 	};
 
 	const add = function (item) {
-		if (isEnum && (t.isStringLiteral(item) || t.isNumericLiteral(item))) {
+		if (isEnum && (t.isStringLiteral(item) || isNumber(item))) {
 			items.push(item);
 		}
 		else {
@@ -399,7 +399,7 @@ function astEnumToAjvSchema(root, params) {
 	let isEnum = true;
 
 	const checkIsEnum = function (item) {
-		if (!t.isStringLiteral(item) && !t.isNumericLiteral(item)) {
+		if (!t.isStringLiteral(item) && !isNumber(item)) {
 			isEnum = false;
 			return false;
 		}
@@ -426,7 +426,9 @@ function astEnumToAjvSchema(root, params) {
 	const first = items[0];
 
 	if (isEnum) {
-		if (items.some(item => item.type !== first.type)) {
+		const typeChecker = isNumber(first) ? isNumber : t.isStringLiteral;
+
+		if (items.some(item => !typeChecker(item))) {
 			throw new Error(`All items of enum should be same type`);
 		}
 
@@ -437,7 +439,7 @@ function astEnumToAjvSchema(root, params) {
 		const $enum = cloneDeep(astEnum);
 		getProp($enum, 'enum').value.elements = items;
 
-		if (t.isNumericLiteral(first)) {
+		if (isNumber(first)) {
 			getProp($enum, 'type').value.value = "number";
 		}
 
@@ -737,5 +739,16 @@ function isDoubleExclamation(node) {
 		node.operator === '!' &&
 		t.isUnaryExpression(node.argument) &&
 		node.argument.operator === '!'
+	);
+}
+
+function isNumber(node) {
+	return (
+		t.isNumericLiteral(node) ||
+		(
+			t.isUnaryExpression(node) &&
+			node.operator === '-' &&
+			t.isNumericLiteral(node.argument)
+		)
 	);
 }

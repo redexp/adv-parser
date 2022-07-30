@@ -36,7 +36,7 @@ describe('parseSchema', function () {
 				}],
 				listOr: [number || string],
 				listTwo: [number, string],
-				enumInt: 1 || 2 || 3,
+				enumInt: -1 || 2 || 3,
 				enumStr: "user" || 'account' || "item",
 				any_of: number || string || int || null,
 				all_of: number && string && int,
@@ -121,7 +121,7 @@ describe('parseSchema', function () {
 				},
 				enumInt: {
 					"type": "number",
-					"enum": [1, 2, 3]
+					"enum": [-1, 2, 3]
 				},
 				enumStr: {
 					"type": "string",
