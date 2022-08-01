@@ -40,6 +40,8 @@ describe('parseSchema', function () {
 				enumStr: "user" || 'account' || "item",
 				any_of: number || string || int || null,
 				all_of: number && string && int,
+				[intBetween]: -1 <= int < 10,
+				[intLT]: uint < 10,
 			}
 		`);
 
@@ -146,7 +148,17 @@ describe('parseSchema', function () {
 					}, {
 						"type": "integer"
 					}]
-				}
+				},
+				intBetween: {
+					type: 'integer',
+					minimum: -1,
+					exclusiveMaximum: 10,
+				},
+				intLT: {
+					type: 'integer',
+					minimum: 0,
+					exclusiveMaximum: 10,
+				},
 			}
 		});
 	});

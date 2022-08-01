@@ -7,6 +7,7 @@ const defaultSchemas = require('./schemas');
 const {isPure, asPure, getProp, getPropName, prependProp, removeProp, addProp, replaceProp} = require('./lib/object');
 const defaultMethods = require('./methods');
 const defaultObjectMethods = require('./methods/object');
+const {set} = require("./methods");
 
 const defaultSchemasNames = Object.keys(defaultSchemas);
 
@@ -103,6 +104,12 @@ function astToAjvSchema(root, params) {
 	}
 	else if (isRightShiftWithObjects(root)) {
 		return astRightShiftToAjvSchema(root, params);
+	}
+	else if (isBetweenExpression(root)) {
+		return astBetweenExpressionToAjvSchema(root, params);
+	}
+	else if (isNumberRangeExpression(root)) {
+		return astNumberRangeExpressionToAjvSchema(root, params);
 	}
 	else if (isObjectName(root) || t.isNullLiteral(root)) {
 		return astObjectNameToAjvSchema(root, params);
@@ -613,6 +620,37 @@ function astOrWithRightShiftToAjvSchema(root, params) {
 	return topIfThen;
 }
 
+function astBetweenExpressionToAjvSchema(root, params) {
+	const {left, right} = root;
+	const x = left.right;
+
+	let schema = astToAjvSchema(x, params);
+
+	schema = set(schema, [left.operator === '<=' ? 'minimum' : 'exclusiveMinimum', left.left], params);
+	schema = set(schema, [root.operator === '<=' ? 'maximum' : 'exclusiveMaximum', right], params);
+
+	return schema;
+}
+
+function astNumberRangeExpressionToAjvSchema(root, params) {
+	const {left, operator, right} = root;
+
+	const schema = astToAjvSchema(left, params);
+
+	return (
+		set(schema, [
+			operator === '<' ?
+				'exclusiveMaximum' :
+			operator === '<=' ?
+				'maximum' :
+			operator === '>' ?
+				'exclusiveMinimum' :
+				'minimum'
+			, right], params)
+	);
+
+}
+
 function addDescription(root, target) {
 	const comments = (
 		Array.isArray(root) ?
@@ -750,5 +788,30 @@ function isNumber(node) {
 			node.operator === '-' &&
 			t.isNumericLiteral(node.argument)
 		)
+	);
+}
+
+function isBetweenExpression(root) {
+	return (
+		t.isBinaryExpression(root) &&
+		(
+			root.operator === '<' ||
+			root.operator === '<='
+		) &&
+		t.isBinaryExpression(root.left) &&
+		(
+			root.left.operator === '<' ||
+			root.left.operator === '<='
+		) &&
+		isNumber(root.right) &&
+		isNumber(root.left.left)
+	);
+}
+
+function isNumberRangeExpression(root) {
+	return (
+		t.isBinaryExpression(root) &&
+		/^[<>]=?$/.test(root.operator) &&
+		isNumber(root.right)
 	);
 }

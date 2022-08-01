@@ -12,6 +12,7 @@ var schemas = {
 	string: require('./string'),
 	number: require('./number'),
 	int: require('./int'),
+	uint: require('./uint'),
 	positive: require('./positive'),
 	negative: require('./negative'),
 	id: require('./id'),
