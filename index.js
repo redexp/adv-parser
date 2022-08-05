@@ -433,14 +433,38 @@ function astEnumToAjvSchema(root, params) {
 	const first = items[0];
 
 	if (isEnum) {
-		const typeChecker = isNumber(first) ? isNumber : t.isStringLiteral;
-
-		if (items.some(item => !typeChecker(item))) {
-			throw new Error(`All items of enum should be same type`);
-		}
-
 		if (root.operator !== '||') {
 			throw new Error(`Invalid operator for enum: ${root.operator}`);
+		}
+
+		const strings = [];
+		const numbers = [];
+
+		for (const item of items) {
+			if (isNumber(item)) {
+				numbers.push(item);
+			}
+			else {
+				strings.push(item);
+			}
+		}
+
+		if (strings.length > 0 && numbers.length > 0) {
+			const anyOf = cloneDeep(astAnyOf);
+			const $strEnum = cloneDeep(astEnum);
+			const $numEnum = cloneDeep(astEnum);
+
+			getProp($strEnum, 'enum').value.elements = strings;
+			getProp($numEnum, 'enum').value.elements = numbers;
+			getProp($numEnum, 'type').value.value = "number";
+
+			getProp(anyOf, 'anyOf').value.elements = (
+				strings.includes(first) ?
+					[$strEnum, $numEnum] :
+					[$numEnum, $strEnum]
+			);
+
+			return anyOf;
 		}
 
 		const $enum = cloneDeep(astEnum);

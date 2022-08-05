@@ -38,6 +38,7 @@ describe('parseSchema', function () {
 				listTwo: [number, string],
 				enumInt: -1 || 2 || 3,
 				enumStr: "user" || 'account' || "item",
+				[enumIntStr]: "1" || 1 || "2" || 2,
 				any_of: number || string || int || null,
 				all_of: number && string && int,
 				[intBetween]: -1 <= int < 10,
@@ -128,6 +129,18 @@ describe('parseSchema', function () {
 				enumStr: {
 					"type": "string",
 					"enum": ["user", "account", "item"]
+				},
+				enumIntStr: {
+					anyOf: [
+						{
+							type: "string",
+							enum: ['1', '2']
+						},
+						{
+							type: "number",
+							enum: [1, 2]
+						}
+					]
 				},
 				any_of: {
 					"anyOf": [{
