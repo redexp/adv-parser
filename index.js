@@ -394,8 +394,10 @@ function astEnumToAjvSchema(root, params) {
 		}
 	};
 
+	const isEnumNode = (node) => t.isStringLiteral(node) || isNumber(node) || t.isNullLiteral(node);
+
 	const add = function (item) {
-		if (isEnum && (t.isStringLiteral(item) || isNumber(item))) {
+		if (isEnum && isEnumNode(item)) {
 			items.push(item);
 		}
 		else {
@@ -406,7 +408,7 @@ function astEnumToAjvSchema(root, params) {
 	let isEnum = true;
 
 	const checkIsEnum = function (item) {
-		if (!t.isStringLiteral(item) && !isNumber(item)) {
+		if (!isEnumNode(item)) {
 			isEnum = false;
 			return false;
 		}
@@ -439,30 +441,51 @@ function astEnumToAjvSchema(root, params) {
 
 		const strings = [];
 		const numbers = [];
+		let $null;
 
 		for (const item of items) {
-			if (isNumber(item)) {
-				numbers.push(item);
+			if (t.isStringLiteral(item)) {
+				strings.push(item);
+			}
+			else if (t.isNullLiteral(item)) {
+				$null = item;
 			}
 			else {
-				strings.push(item);
+				numbers.push(item);
 			}
 		}
 
-		if (strings.length > 0 && numbers.length > 0) {
+		if (
+			(strings.length > 0 && numbers.length > 0) ||
+			$null
+		) {
 			const anyOf = cloneDeep(astAnyOf);
-			const $strEnum = cloneDeep(astEnum);
-			const $numEnum = cloneDeep(astEnum);
+			const elements = [];
 
-			getProp($strEnum, 'enum').value.elements = strings;
-			getProp($numEnum, 'enum').value.elements = numbers;
-			getProp($numEnum, 'type').value.value = "number";
+			if (strings.length === 1) {
+				elements.push(astToAjvSchema(strings[0], params));
+			}
+			else if (strings.length > 1) {
+				const $enum = cloneDeep(astEnum);
+				getProp($enum, 'enum').value.elements = strings;
+				elements.push($enum);
+			}
 
-			getProp(anyOf, 'anyOf').value.elements = (
-				strings.includes(first) ?
-					[$strEnum, $numEnum] :
-					[$numEnum, $strEnum]
-			);
+			if (numbers.length === 1) {
+				elements.push(astToAjvSchema(numbers[0], params));
+			}
+			else if (numbers.length > 1) {
+				const $enum = cloneDeep(astEnum);
+				getProp($enum, 'enum').value.elements = numbers;
+				getProp($enum, 'type').value.value = "number";
+				elements.push($enum);
+			}
+
+			if ($null) {
+				elements.push(astToAjvSchema($null, params));
+			}
+
+			getProp(anyOf, 'anyOf').value.elements = elements;
 
 			return anyOf;
 		}

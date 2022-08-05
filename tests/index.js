@@ -37,8 +37,9 @@ describe('parseSchema', function () {
 				listOr: [number || string],
 				listTwo: [number, string],
 				enumInt: -1 || 2 || 3,
+				[enumIntNull]: -1 || 2 || null,
 				enumStr: "user" || 'account' || "item",
-				[enumIntStr]: "1" || 1 || "2" || 2,
+				[enumIntStr]: "1" || 1 || "2" || 2 || null,
 				any_of: number || string || int || null,
 				all_of: number && string && int,
 				[intBetween]: -1 <= int < 10,
@@ -126,6 +127,17 @@ describe('parseSchema', function () {
 					"type": "number",
 					"enum": [-1, 2, 3]
 				},
+				enumIntNull: {
+					anyOf: [
+						{
+							type: "number",
+							enum: [-1, 2]
+						},
+						{
+							type: "null"
+						}
+					]
+				},
 				enumStr: {
 					"type": "string",
 					"enum": ["user", "account", "item"]
@@ -139,6 +151,9 @@ describe('parseSchema', function () {
 						{
 							type: "number",
 							enum: [1, 2]
+						},
+						{
+							type: "null"
 						}
 					]
 				},
@@ -848,7 +863,7 @@ describe('parseSchema', function () {
 			},
 		});
 
-		res = parser(Test3 => ({test: 'string' || null}));
+		res = parser(Test3 => ({test: 'a' || null}));
 
 		expect(res).to.eql({
 			title: 'Test3',
@@ -858,7 +873,7 @@ describe('parseSchema', function () {
 			properties: {
 				test: {
 					anyOf: [
-						{const: 'string'},
+						{const: 'a'},
 						{type: 'null'}
 					]
 				}
