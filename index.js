@@ -138,6 +138,9 @@ function astToAjvSchema(root, params) {
 	else if (t.isUnaryExpression(root) && root.operator === '!') {
 		return astUnaryToAjvSchema(root, params);
 	}
+	else if (t.isConditionalExpression(root)) {
+		return astTernaryToAjvSchema(root, params);
+	}
 	else {
 		throw new Error(`Unknown scheme node: ${root.type}`);
 	}
@@ -695,7 +698,19 @@ function astNumberRangeExpressionToAjvSchema(root, params) {
 				'minimum'
 			, right], params)
 	);
+}
 
+function astTernaryToAjvSchema({test, consequent, alternate}, params) {
+	const ifThen = t.objectExpression([]);
+	const _if = astToAjvSchema(cloneDeep(test), params);
+	const _then = astToAjvSchema(consequent, params);
+	const _else = astToAjvSchema(alternate, params);
+
+	addProp(ifThen, 'if', _if);
+	addProp(ifThen, 'then', _then);
+	addProp(ifThen, 'else', _else);
+
+	return ifThen;
 }
 
 function addDescription(root, target) {

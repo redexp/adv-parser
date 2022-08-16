@@ -1105,6 +1105,26 @@ describe('parseSchema', function () {
 		});
 	});
 
+	it('ternary', function () {
+		var res = parser(Test => (
+			int ? (-1 || id) : null
+		));
+
+		expect(res).to.eql({
+			title: 'Test',
+			if: {type: 'integer'},
+			then: {
+				anyOf: [
+					{const: -1},
+					{type: 'integer', minimum: 1}
+				]
+			},
+			else: {
+				type: 'null'
+			}
+		});
+	});
+
 	it('pure syntax', function () {
 		var res = parser(Test1 => (
 			{
