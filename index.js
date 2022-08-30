@@ -823,7 +823,7 @@ function addSchemaName(root, name) {
 }
 
 function isObjectName(root) {
-	return t.isIdentifier(root) || t.isMemberExpression(root) || t.isBinaryExpression(root);
+	return t.isIdentifier(root) || t.isMemberExpression(root) || (t.isBinaryExpression(root) && root.operator === '-');
 }
 
 function isRightShiftWithObjects(root) {

@@ -44,6 +44,7 @@ describe('parseSchema', function () {
 				all_of: number && string && int,
 				[intBetween]: -1 <= int < 10,
 				[intLT]: uint < 10,
+				[intInArr]: [uint <= 10],
 			}
 		`);
 
@@ -186,6 +187,14 @@ describe('parseSchema', function () {
 					type: 'integer',
 					minimum: 0,
 					exclusiveMaximum: 10,
+				},
+				intInArr: {
+					type: 'array',
+					items: {
+						type: 'integer',
+						minimum: 0,
+						maximum: 10,
+					}
 				},
 			}
 		});
