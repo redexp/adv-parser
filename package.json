@@ -1,6 +1,6 @@
 {
   "name": "adv-parser",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "ADV parser",
   "main": "index.js",
   "types": "index.d.ts",
@@ -17,6 +17,8 @@
   "keywords": [
     "adv",
     "ajv",
+    "json",
+    "schema",
     "parser"
   ],
   "author": "Sergii Kliuchnyk <sergiikliuchnyk@gmail.com> (https://github.com/redexp)",
@@ -38,7 +40,7 @@
   "devDependencies": {
     "ajv": "^8.11.0",
     "ajv-formats": "^2.1.1",
-    "chai": "^4.3.6",
+    "chai": "^4.4.1",
     "mocha": "^10.0.0"
   }
 }

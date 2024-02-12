@@ -19,22 +19,35 @@ const astAnyOf = toAst(require('./schemas/anyOf'));
 const astAllOf = toAst(require('./schemas/allOf'));
 const astConst = toAst(require('./schemas/const'));
 
-const methodPropName = /^\$/;
+const methodPropName = /^\$/; // name starts with $
 
 module.exports = parseSchema;
 module.exports.getAstSchema = getAstSchema;
+module.exports.parseAdvToAst = getAstSchema;
 module.exports.generateAjvSchema = generateAjvSchema;
+module.exports.advAstToJsonSchema = generateAjvSchema;
 module.exports.astToAjvSchema = astToAjvSchema;
+module.exports.advAstToJsonSchemaAst = astToAjvSchema;
+module.exports.jsonSchemaAstToJsonSchema = ajvAstToJsonSchema;
 
 /**
- * @param {string|function} code
- * @param {{schemas?: Object, methods?: Object<string, function>, functions?: Object<string, function>, objectOptions?: Object<string, function>, schemaVersion?: string}} params
- * @returns {Object}
+ * Take ADV code and return JSON Schema object
+ *
+ * @param {import('./index').Code} code
+ * @param {import('./index').Params} params
+ * @returns {import('./index').AjvSchema}
  */
 function parseSchema(code, params) {
 	return generateAjvSchema(toAst(code), params);
 }
 
+/**
+ * Take AST from ADV code and return JSON Schema object
+ *
+ * @param {import('./index').ADV_AST} ast
+ * @param {import('./index').Params} params
+ * @return {import('./index').JSONSchema}
+ */
 function generateAjvSchema(ast, {
 	schemas = {...defaultSchemas},
 	methods = defaultMethods,
@@ -54,9 +67,17 @@ function generateAjvSchema(ast, {
 	replaceObjectKeysWithString(schema);
 	replaceComments(schema);
 
-	return toJsonObject(schema);
+	return ajvAstToJsonSchema(schema);
 }
 
+/**
+ * Take ADV code and return it AST object
+ * Side effect - AST object of ADV schema will be added to `params.schemas`
+ *
+ * @param {import('./index').Code} code
+ * @param {{schemas?: import('./index').Schemas}} params
+ * @return {import('./index').ADV_AST}
+ */
 function getAstSchema(code, {schemas} = {}) {
 	const schema = toAst(code);
 
@@ -89,7 +110,13 @@ function getAstSchema(code, {schemas} = {}) {
 	return schema;
 }
 
-function toJsonObject(schema) {
+/**
+ * Take AST of JSON Schema and return JSON Schema object
+ *
+ * @param {import('./index').JSONSchemaAST} schema
+ * @return {import('./index').JSONSchema}
+ */
+function ajvAstToJsonSchema(schema) {
 	try {
 		return JSON.parse(generate(schema).code);
 	}
@@ -98,6 +125,13 @@ function toJsonObject(schema) {
 	}
 }
 
+/**
+ * Take AST from ADV code and return AST of JSON Schema
+ *
+ * @param {import('./index').ADV_AST} root
+ * @param {import('./index').Params} params
+ * @return {import('./index').JSONSchemaAST}
+ */
 function astToAjvSchema(root, params) {
 	if (t.isAssignmentExpression(root)) {
 		return astAssignToAjvSchema(root, params);
@@ -164,11 +198,11 @@ function astObjectToAjvSchema(root, params) {
 	const {objectOptions} = params;
 
 	const obj = cloneDeep(astObject);
-	var required = getProp(obj, 'required');
-	var properties = getProp(obj, 'properties');
+	let required = getProp(obj, 'required');
+	let properties = getProp(obj, 'properties');
 
-	var props = [];
-	var patternProps = [];
+	let props = [];
+	let patternProps = [];
 
 	const restoreProps = function () {
 		required = getProp(obj, 'required');
@@ -185,6 +219,7 @@ function astObjectToAjvSchema(root, params) {
 	};
 
 	const toggleRequired = function (name, add) {
+		/** @type {Array<{value: any}>} */
 		const list = required.value.elements;
 
 		if (add) {
@@ -549,7 +584,7 @@ function astCallExpToAjvSchema(root, params) {
 	}
 
 	const {object, property} = root.callee;
-	var schema = astToAjvSchema(object, params);
+	let schema = astToAjvSchema(object, params);
 	const {name} = property;
 	const method = methods[name];
 
