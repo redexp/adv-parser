@@ -2092,3 +2092,34 @@ describe('methods', function () {
 		});
 	});
 });
+
+describe('errors', function () {
+	const parser = require('../index');
+	const AdvSyntaxError = require('../lib/AdvSyntaxError');
+	const AdvReferenceError = require('../lib/AdvReferenceError');
+	const RuntimeError = require('../lib/RuntimeError');
+
+	it('should throw babel syntax error', function () {
+		expect(() => parser(`{id: }`))
+		.to.throw(SyntaxError, 'Unexpected token')
+		.with.property('code', `({id: });`);
+	});
+
+	it('should throw adv syntax error', function () {
+		expect(() => parser(`{id: 1 | 2}`))
+		.to.throw(AdvSyntaxError, 'Unknown syntax')
+		.with.property('loc');
+	});
+
+	it('should throw adv reference error', function () {
+		expect(() => parser(`{id: a}`))
+		.to.throw(AdvReferenceError, 'Unknown reference: "a"')
+		.with.property('loc');
+	});
+
+	it('should throw runtime error', function () {
+		expect(() => parser(`{id: string.minLength()}`))
+		.to.throw(RuntimeError, 'Method "minLength" required one argument')
+		.with.property('loc');
+	});
+});

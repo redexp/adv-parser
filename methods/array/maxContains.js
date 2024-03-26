@@ -5,7 +5,7 @@ module.exports = function maxContains(schema, args, params = {}) {
 	const methodName = 'maxContains';
 	method(methodName);
 	isArray(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

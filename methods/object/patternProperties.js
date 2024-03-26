@@ -1,12 +1,13 @@
 const t = require('@babel/types');
 const {method, getMethodName, isObject, oneArg, firstObject} = require('../utils');
 const set = require('../set');
+const AdvSyntaxError = require('../../lib/AdvSyntaxError');
 
 module.exports = function patternProperties(schema, args, params = {}) {
 	const methodName = 'patternProperties';
 	method(methodName);
 	isObject(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,
@@ -36,7 +37,7 @@ function convertProperties(value, params) {
 	value = {...value};
 	value.properties = value.properties.map(function (prop) {
 		if (!t.isObjectProperty(prop)) {
-			throw new Error(`Method "${getMethodName()}" invalid object property type: ${prop.type}`);
+			throw new AdvSyntaxError(prop, `Method ${JSON.stringify(getMethodName())} invalid object property type: ${prop.type}`);
 		}
 
 		prop = {...prop};

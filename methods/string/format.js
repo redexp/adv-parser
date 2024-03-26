@@ -5,7 +5,7 @@ module.exports = function format(schema, args, params = {}) {
 	const methodName = 'format';
 	method(methodName);
 	isString(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

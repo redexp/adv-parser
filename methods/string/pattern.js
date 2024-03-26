@@ -5,7 +5,7 @@ module.exports = function pattern(schema, args, params = {}) {
 	const methodName = 'pattern';
 	method(methodName);
 	isString(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

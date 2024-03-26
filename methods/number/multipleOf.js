@@ -5,7 +5,7 @@ module.exports = function multipleOf(schema, args, params = {}) {
 	const methodName = 'multipleOf';
 	method(methodName);
 	isNumber(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

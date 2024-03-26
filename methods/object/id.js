@@ -4,7 +4,7 @@ const set = require('../set');
 module.exports = function id(schema, args, params = {}) {
 	const methodName = 'id';
 	method(methodName);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

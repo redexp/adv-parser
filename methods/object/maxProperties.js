@@ -5,7 +5,7 @@ module.exports = function maxProperties(schema, args, params = {}) {
 	const methodName = 'maxProperties';
 	method(methodName);
 	isObject(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

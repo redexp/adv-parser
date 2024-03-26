@@ -5,7 +5,7 @@ module.exports = function contains(schema, args, params = {}) {
 	const methodName = 'contains';
 	method(methodName);
 	isArray(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

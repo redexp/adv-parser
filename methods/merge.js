@@ -4,11 +4,12 @@ const indexBy = require('lodash.keyby');
 const {method, atLeastOne} = require('./utils');
 const {getProp, getPropStringValue, getPropName, replaceProp} = require('../lib/object');
 const {push, remove} = require('../lib/array');
+const RuntimeError = require('../lib/RuntimeError');
 
 module.exports = function merge(target, schemas, params = {}) {
 	const {methodName = 'merge', clone = true} = params;
 	method(methodName);
-	atLeastOne(schemas);
+	atLeastOne(schemas, target);
 
 	const {astToAjvSchema} = require('../index');
 
@@ -38,7 +39,7 @@ module.exports = function merge(target, schemas, params = {}) {
 		let type = getPropStringValue(schema, 'type');
 
 		if (type !== mainType) {
-			throw new Error(`You can extend only same type schemas: ${mainType} and ${type}`);
+			throw new RuntimeError(schema, `You can extend only same type schemas: ${JSON.stringify(mainType)} and ${JSON.stringify(type)}`);
 		}
 
 		if (isObject) {

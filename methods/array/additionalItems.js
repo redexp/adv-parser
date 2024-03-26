@@ -5,7 +5,7 @@ module.exports = function additionalItems(schema, args, params = {}) {
 	const methodName = 'additionalItems';
 	method(methodName);
 	isArray(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

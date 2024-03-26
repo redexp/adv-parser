@@ -4,7 +4,7 @@ const set = require('../set');
 module.exports = function not(schema, args, params = {}) {
 	const methodName = 'ref';
 	method(methodName);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

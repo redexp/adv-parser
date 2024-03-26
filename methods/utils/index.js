@@ -1,6 +1,9 @@
 const t = require('@babel/types');
 const {getPropStringValue} = require('../../lib/object');
+const AdvSyntaxError = require('../../lib/AdvSyntaxError');
+const RuntimeError = require('../../lib/RuntimeError');
 
+// noinspection JSUnusedGlobalSymbols
 module.exports = {
 	setMethodName,
 	method: setMethodName,
@@ -23,7 +26,7 @@ module.exports = {
 	onlyStrings,
 };
 
-var curMethodName = 'unknown';
+let curMethodName = 'unknown';
 
 function setMethodName(name) {
 	curMethodName = name;
@@ -35,27 +38,27 @@ function getMethodName() {
 
 function isObject(schema) {
 	if (getPropStringValue(schema, 'type') !== 'object') {
-		throw new Error(`Method "${curMethodName}" allowed only for "object" schema`);
+		throw new RuntimeError(schema, `Method ${JSON.stringify(curMethodName)} allowed only for "object" schema`);
 	}
 }
 
 function isString(schema) {
 	if (getPropStringValue(schema, 'type') !== 'string') {
-		throw new Error(`Method "${curMethodName}" allowed only for "string" schema`);
+		throw new RuntimeError(schema, `Method ${JSON.stringify(curMethodName)} allowed only for "string" schema`);
 	}
 }
 
 function isNumber(schema) {
-	var type = getPropStringValue(schema, 'type');
+	const type = getPropStringValue(schema, 'type');
 
 	if (type !== 'number' && type !== 'integer') {
-		throw new Error(`Method "${curMethodName}" allowed only for "number" schema`);
+		throw new RuntimeError(schema, `Method ${JSON.stringify(curMethodName)} allowed only for "number" schema`);
 	}
 }
 
 function isArray(schema) {
 	if (getPropStringValue(schema, 'type') !== 'array') {
-		throw new Error(`Method "${curMethodName}" allowed only for "array" schema`);
+		throw new RuntimeError(schema, `Method ${JSON.stringify(curMethodName)} allowed only for "array" schema`);
 	}
 }
 
@@ -70,36 +73,36 @@ function argType(num, value, type) {
 	switch (type) {
 	case 'object':
 		if (!t.isObjectExpression(value)) {
-			throw new Error(`Method "${curMethodName}" required ${num} argument to be an object`);
+			throw new RuntimeError(value, `Method ${JSON.stringify(curMethodName)} required ${num} argument to be an object`);
 		}
 		break;
 
 	case 'array':
 		if (!t.isArrayExpression(value)) {
-			throw new Error(`Method "${curMethodName}" required ${num} argument to be an array`);
+			throw new RuntimeError(value, `Method ${JSON.stringify(curMethodName)} required ${num} argument to be an array`);
 		}
 		break;
 
 	case 'number':
 		if (!t.isNumericLiteral(value)) {
-			throw new Error(`Method "${curMethodName}" required ${num} argument to be a number`);
+			throw new RuntimeError(value, `Method ${JSON.stringify(curMethodName)} required ${num} argument to be a number`);
 		}
 		break;
 
 	case 'string':
 		if (!t.isStringLiteral(value)) {
-			throw new Error(`Method "${curMethodName}" required ${num} argument to be a string`);
+			throw new RuntimeError(value, `Method ${JSON.stringify(curMethodName)} required ${num} argument to be a string`);
 		}
 		break;
 
 	case 'boolean':
 		if (!t.isBooleanLiteral(value)) {
-			throw new Error(`Method "${curMethodName}" required ${num} argument to be a boolean`);
+			throw new RuntimeError(value, `Method ${JSON.stringify(curMethodName)} required ${num} argument to be a boolean`);
 		}
 		break;
 
 	default:
-		throw new Error(`Unknown argument type: ${JSON.stringify(type)}`);
+		throw new AdvSyntaxError(value, `Unknown argument type: ${JSON.stringify(type)}`);
 	}
 }
 
@@ -127,43 +130,43 @@ function firstBoolean(value) {
 	return firstType(value, 'boolean');
 }
 
-function oneArg(args) {
+function oneArg(args, schema = {}) {
 	if (args.length !== 1) {
-		throw new Error(`Method "${curMethodName}" required one argument`);
+		throw new RuntimeError(schema, `Method ${JSON.stringify(curMethodName)} required one argument`);
 	}
 }
 
-function atLeastOne(args) {
+function atLeastOne(args, schema = {}) {
 	if (args.length === 0) {
-		throw new Error(`Method "${curMethodName}" required at least one argument`);
+		throw new RuntimeError(schema, `Method ${JSON.stringify(curMethodName)} required at least one argument`);
 	}
 }
 
-function maxTwo(args) {
+function maxTwo(args, schema = {}) {
 	if (args.length > 2) {
-		throw new Error(`Method "${curMethodName}" accept only two arguments`);
+		throw new RuntimeError(schema, `Method ${JSON.stringify(curMethodName)} accept only two arguments`);
 	}
 }
 
-function objectOrTwo(args) {
-	atLeastOne(args);
-	maxTwo(args);
+function objectOrTwo(args, schema) {
+	atLeastOne(args, schema);
+	maxTwo(args, schema);
 
-	var first = args[0];
+	const first = args[0];
 
 	if (args.length === 1) {
 		if (!t.isObjectExpression(first)) {
 			if (t.isStringLiteral(first)) {
-				throw new Error(`Method "${curMethodName}" required two arguments`);
+				throw new RuntimeError(first, `Method ${JSON.stringify(curMethodName)} required two arguments`);
 			}
 			else {
-				throw new Error(`Method "${curMethodName}" required first argument to be an object`);
+				throw new RuntimeError(first, `Method ${JSON.stringify(curMethodName)} required first argument to be an object`);
 			}
 		}
 	}
 	else {
 		if (typeof first !== 'string' && !t.isStringLiteral(first)) {
-			throw new Error(`Method "${curMethodName}" required first argument to be a string`);
+			throw new RuntimeError(first, `Method ${JSON.stringify(curMethodName)} required first argument to be a string`);
 		}
 	}
 }
@@ -171,7 +174,7 @@ function objectOrTwo(args) {
 function onlyStrings(args) {
 	for (const s of args) {
 		if (!t.isStringLiteral(s)) {
-			throw new Error(`Method "${curMethodName}" accept only strings`);
+			throw new RuntimeError(s, `Method ${JSON.stringify(curMethodName)} accept only strings`);
 		}
 	}
 }

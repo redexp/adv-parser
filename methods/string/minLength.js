@@ -5,7 +5,7 @@ module.exports = function minLength(schema, args, params = {}) {
 	const methodName = 'minLength';
 	method(methodName);
 	isString(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

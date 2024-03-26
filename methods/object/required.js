@@ -4,21 +4,22 @@ const {method, isObject, atLeastOne, onlyStrings} = require('../utils');
 const set = require('../set');
 const {getProp, replaceProp} = require('../../lib/object');
 const {push, remove} = require('../../lib/array');
+const RuntimeError = require('../../lib/RuntimeError');
 
 module.exports = function required(schema, args, {methodName = 'required', add = true, clone = true} = {}) {
 	method(methodName);
 	isObject(schema);
-	atLeastOne(args);
+	atLeastOne(args, schema);
 
 	if (args.length === 1 && !t.isStringLiteral(args[0])) {
 		let valueType = value => {
 			if (!t.isArrayExpression(value)) {
-				throw new Error(`Method "${methodName}" required array`);
+				throw new RuntimeError(value, `Method ${JSON.stringify(methodName)} required array`);
 			}
 
 			for (const item of value.elements) {
 				if (!t.isStringLiteral(item)) {
-					throw new Error(`Method "${methodName}" required array of strings`);
+					throw new RuntimeError(item, `Method ${JSON.stringify(methodName)} required array of strings`);
 				}
 			}
 		}

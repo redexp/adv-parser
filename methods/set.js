@@ -7,7 +7,7 @@ module.exports = function set(schema, args, params = {}) {
 	const {methodName = 'set', clone = true, convertValue = false, valueType} = params;
 
 	method(methodName);
-	objectOrTwo(args);
+	objectOrTwo(args, schema);
 
 	var [first, second] = args;
 

@@ -6,7 +6,7 @@ module.exports = function dependentSchemas(schema, args, params = {}) {
 	const methodName = 'dependentSchemas';
 	method(methodName);
 	isObject(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

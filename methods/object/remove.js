@@ -5,7 +5,7 @@ const {getProp, getPropName, replaceProp} = require('../../lib/object');
 module.exports = function remove(schema, args, {methodName = 'remove'} = {}) {
 	method(methodName);
 	isObject(schema);
-	atLeastOne(args);
+	atLeastOne(args, schema);
 	onlyStrings(args);
 
 	args = args.map(s => s.value);

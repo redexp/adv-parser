@@ -5,7 +5,7 @@ module.exports = function uniqueItems(schema, args, params = {}) {
 	const methodName = 'uniqueItems';
 	method(methodName);
 	isArray(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

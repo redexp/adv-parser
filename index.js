@@ -8,6 +8,9 @@ const {isPure, asPure, getProp, getPropName, prependProp, removeProp, addProp, r
 const defaultMethods = require('./methods');
 const defaultObjectMethods = require('./methods/object');
 const {set} = require("./methods");
+const AdvSyntaxError = require('./lib/AdvSyntaxError');
+const AdvReferenceError = require('./lib/AdvReferenceError');
+const RuntimeError = require('./lib/RuntimeError');
 
 const defaultSchemasNames = Object.keys(defaultSchemas);
 
@@ -29,6 +32,7 @@ module.exports.advAstToJsonSchema = generateAjvSchema;
 module.exports.astToAjvSchema = astToAjvSchema;
 module.exports.advAstToJsonSchemaAst = astToAjvSchema;
 module.exports.jsonSchemaAstToJsonSchema = ajvAstToJsonSchema;
+module.exports.jsonSchemaAstToJsonSchemaString = jsonSchemaAstToJsonSchemaString;
 
 /**
  * Take ADV code and return JSON Schema object
@@ -111,18 +115,21 @@ function getAstSchema(code, {schemas} = {}) {
 }
 
 /**
+ * @param {import('./index').JSONSchemaAST} schema
+ * @returns {string}
+ */
+function jsonSchemaAstToJsonSchemaString(schema) {
+	return generate(schema).code;
+}
+
+/**
  * Take AST of JSON Schema and return JSON Schema object
  *
  * @param {import('./index').JSONSchemaAST} schema
  * @return {import('./index').JSONSchema}
  */
 function ajvAstToJsonSchema(schema) {
-	try {
-		return JSON.parse(generate(schema).code);
-	}
-	catch (e) {
-		throw e;
-	}
+	return JSON.parse(jsonSchemaAstToJsonSchemaString(schema));
 }
 
 /**
@@ -176,7 +183,7 @@ function astToAjvSchema(root, params) {
 		return astTernaryToAjvSchema(root, params);
 	}
 	else {
-		throw new Error(`Unknown scheme node: ${root.type}`);
+		throw new AdvSyntaxError(root);
 	}
 }
 
@@ -251,7 +258,7 @@ function astObjectToAjvSchema(root, params) {
 		}
 
 		if (!t.isObjectProperty(prop)) {
-			throw new Error(`Invalid object element: ${prop.type}`);
+			throw new AdvSyntaxError(prop, 'Invalid object property type ' + prop.type);
 		}
 
 		if (t.isRegExpLiteral(prop.key)) {
@@ -336,7 +343,7 @@ function astObjectNameToAjvSchema(root, params) {
 	const ast = schemas[name];
 
 	if (!ast) {
-		throw new Error(`Unknown OBJECT_NAME: ${name}`);
+		throw new AdvReferenceError(name, root);
 	}
 
 	const schema = astToAjvSchema(cloneDeep(ast), params);
@@ -356,7 +363,7 @@ function astArrayToAjvSchema(root, params, exact) {
 
 	if (exact) {
 		if (elements.some(el => t.isSpreadElement(el))) {
-			throw new Error(`Invalid array syntax. Exclamation sign with spread is not allowed`);
+			throw new AdvSyntaxError(root, `Invalid array syntax. Exclamation sign with spread is not allowed`);
 		}
 
 		addProp(arr, 'minItems', t.numericLiteral(elements.length));
@@ -380,7 +387,7 @@ function astArrayToAjvSchema(root, params, exact) {
 		let spreads = elements.filter(el => t.isSpreadElement(el));
 
 		if (spreads.length > 1) {
-			throw new Error(`Invalid array syntax. Only one spread allowed`);
+			throw new AdvSyntaxError(root, `Invalid array syntax. Only one spread allowed`);
 		}
 
 		addProp(
@@ -410,11 +417,11 @@ function astEnumToAjvSchema(root, params) {
 		const {left, right, operator} = node;
 
 		if (operator !== '||' && operator !== '&&') {
-			throw new Error(`Invalid enum operator: ${operator}`);
+			throw new AdvSyntaxError(node, `Invalid enum operator: ${JSON.stringify(operator)}`);
 		}
 
 		if (operator !== root.operator) {
-			throw new Error(`All operators of enum should be same type: ${root.operator}`);
+			throw new AdvSyntaxError(node, `All operators of enum should be same type: ${root.operator}`);
 		}
 
 		if (t.isLogicalExpression(left) && !(left.extra && left.extra.parenthesized)) {
@@ -474,7 +481,7 @@ function astEnumToAjvSchema(root, params) {
 
 	if (isEnum) {
 		if (root.operator !== '||') {
-			throw new Error(`Invalid operator for enum: ${root.operator}`);
+			throw new AdvSyntaxError(root, `Invalid operator for enum: ${root.operator}`);
 		}
 
 		const strings = [];
@@ -573,14 +580,14 @@ function astCallExpToAjvSchema(root, params) {
 		let func = functions && functions[root.callee.name];
 
 		if (!func) {
-			throw new Error(`Unknown function: ${root.callee.name}`);
+			throw new AdvReferenceError(root.callee.name, root.callee, `Unknown function: ${JSON.stringify(root.callee.name)}`);
 		}
 
 		return func(root.arguments, params);
 	}
 
 	if (!t.isMemberExpression(root.callee)) {
-		throw new Error(`Invalid call expression: ${root.callee.type}`);
+		throw new AdvSyntaxError(root.callee, `Invalid call expression type: ${JSON.stringify(root.callee.type)}`);
 	}
 
 	const {object, property} = root.callee;
@@ -589,13 +596,13 @@ function astCallExpToAjvSchema(root, params) {
 	const method = methods[name];
 
 	if (!method) {
-		throw new Error(`Unknown schema method: ${name}`);
+		throw new AdvReferenceError(name, root.callee, `Unknown schema method: ${name}`);
 	}
 
 	schema = method(schema, root.arguments, params);
 
 	if (!schema) {
-		throw new Error(`Method ${JSON.stringify(name)} must return schema`);
+		throw new RuntimeError(root.callee, `Method ${JSON.stringify(name)} must return schema`);
 	}
 
 	if (schema.properties) {
@@ -630,11 +637,11 @@ function astUnaryToAjvSchema(root, params) {
 			return astArrayToAjvSchema(root, params, true);
 		}
 		else {
-			throw new Error(`Unknown argument type for "!!" operator: ${JSON.stringify(root.type)}`);
+			throw new AdvSyntaxError(root, `Unknown argument type for "!!" operator: ${JSON.stringify(root.type)}`);
 		}
 	}
 	else {
-		throw new Error(`Unknown operator "!"`);
+		throw new AdvSyntaxError(root, `Unknown operator "!"`);
 	}
 }
 
@@ -796,7 +803,7 @@ function replaceObjectKeysWithString(root) {
 				prop.key = t.stringLiteral(key.name);
 			}
 			else if (!t.isStringLiteral(key)) {
-				throw new Error(`Unknown object property key type: ${key.type}`);
+				throw new AdvSyntaxError(key, `Unknown object property key type: ${key.type}`);
 			}
 			else {
 				delete key.extra;
@@ -839,7 +846,7 @@ function getSchemaName(root) {
 	const {left, operator} = root;
 
 	if (operator !== '=') {
-		throw new Error(`Invalid assign operator: ${JSON.stringify(operator)}`);
+		throw new AdvSyntaxError(root, `Invalid assign operator: ${JSON.stringify(operator)}`);
 	}
 
 	return getObjectName(left);

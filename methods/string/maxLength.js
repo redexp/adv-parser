@@ -5,7 +5,7 @@ module.exports = function maxLength(schema, args, params = {}) {
 	const methodName = 'maxLength';
 	method(methodName);
 	isString(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

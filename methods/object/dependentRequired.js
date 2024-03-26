@@ -4,7 +4,7 @@ const set = require('../set');
 module.exports = function dependentRequired(schema, args, {methodName = 'dependentRequired', ...params} = {}) {
 	method(methodName);
 	isObject(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

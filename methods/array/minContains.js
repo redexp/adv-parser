@@ -5,7 +5,7 @@ module.exports = function minContains(schema, args, params = {}) {
 	const methodName = 'minContains';
 	method(methodName);
 	isArray(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

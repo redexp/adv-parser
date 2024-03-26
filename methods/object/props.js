@@ -2,11 +2,12 @@ const cloneDeep = require('lodash.clonedeep');
 const t = require('@babel/types');
 const {method, isObject, atLeastOne} = require('../utils');
 const {getProp, getPropName, replaceProp} = require('../../lib/object');
+const RuntimeError = require('../../lib/RuntimeError');
 
 module.exports = function props(schema, args, {methodName = 'props'} = {}) {
 	method(methodName);
 	isObject(schema);
-	atLeastOne(args);
+	atLeastOne(args, schema);
 
 	const map = {};
 
@@ -17,14 +18,14 @@ module.exports = function props(schema, args, {methodName = 'props'} = {}) {
 		else if (t.isObjectExpression(prop)) {
 			for (const item of prop.properties) {
 				if (!t.isStringLiteral(item.value)) {
-					throw new Error(`Method "${methodName}" accept only strings or key/string objects`);
+					throw new RuntimeError(item, `Method ${JSON.stringify(methodName)} accept only strings or key/string objects`);
 				}
 
 				map[item.key.name || item.key.value] = item.value.value;
 			}
 		}
 		else {
-			throw new Error(`Method "${methodName}" accept only strings or key/string objects`);
+			throw new RuntimeError(schema, `Method ${JSON.stringify(methodName)} accept only strings or key/string objects`);
 		}
 	}
 

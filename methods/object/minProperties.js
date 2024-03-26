@@ -5,7 +5,7 @@ module.exports = function minProperties(schema, args, params = {}) {
 	const methodName = 'minProperties';
 	method(methodName);
 	isObject(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

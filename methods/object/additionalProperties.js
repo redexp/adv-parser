@@ -5,7 +5,7 @@ module.exports = function additionalProperties(schema, args, params = {}) {
 	const methodName = 'additionalProperties';
 	method(methodName);
 	isObject(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

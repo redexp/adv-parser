@@ -5,7 +5,7 @@ module.exports = function maxItems(schema, args, params = {}) {
 	const methodName = 'maxItems';
 	method(methodName);
 	isArray(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

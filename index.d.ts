@@ -8,6 +8,7 @@ export function generateAjvSchema(ast: ADV_AST, params?: Params): JSONSchema;
 export function getAstSchema(code: Code, params?: {schemas?: Schemas}): ADV_AST;
 export function astToAjvSchema(ast: ADV_AST, params?: Params): JSONSchemaAST;
 export function jsonSchemaAstToJsonSchema(schema: JSONSchemaAST): JSONSchema;
+export function jsonSchemaAstToJsonSchemaString(schema: JSONSchemaAST): string;
 
 export type parseAdvToAst = typeof getAstSchema;
 export type advAstToJsonSchema = typeof generateAjvSchema;

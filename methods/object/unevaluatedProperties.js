@@ -5,7 +5,7 @@ module.exports = function unevaluatedProperties(schema, args, params = {}) {
 	const methodName = 'unevaluatedProperties';
 	method(methodName);
 	isObject(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

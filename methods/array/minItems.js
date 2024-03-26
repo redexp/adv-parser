@@ -5,7 +5,7 @@ module.exports = function minItems(schema, args, params = {}) {
 	const methodName = 'minItems';
 	method(methodName);
 	isArray(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,

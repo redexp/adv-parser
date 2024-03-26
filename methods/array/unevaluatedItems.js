@@ -5,7 +5,7 @@ module.exports = function unevaluatedItems(schema, args, params = {}) {
 	const methodName = 'unevaluatedItems';
 	method(methodName);
 	isArray(schema);
-	oneArg(args);
+	oneArg(args, schema);
 
 	return set(
 		schema,
