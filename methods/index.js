@@ -46,6 +46,7 @@ const propertyNames = require('./object/propertyNames');
 const unevaluatedProperties = require('./object/unevaluatedProperties');
 const id = require('./object/id');
 const ref = require('./object/ref');
+const notNull = require('./enum/notNull');
 
 module.exports = {
 	merge,
@@ -96,4 +97,6 @@ module.exports = {
 	unevaluatedProperties,
 	id,
 	ref,
+
+	notNull,
 };

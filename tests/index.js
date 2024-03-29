@@ -1,3 +1,5 @@
+// noinspection JSUnusedLocalSymbols
+
 const {expect} = require('chai');
 
 describe('parseSchema', function () {
@@ -2022,6 +2024,31 @@ describe('methods', function () {
 			`)).to.eql({
 				type: 'string',
 				pattern: "^d+$",
+			});
+		});
+	});
+
+	describe('enum', function () {
+		it('notNull', function () {
+			expect(p(`
+				(string || null).notNull()
+			`))
+			.to.eql({
+				type: 'string',
+			});
+
+			expect(p(`
+				(null || string).notNull()
+			`))
+			.to.eql({
+				type: 'string',
+			});
+
+			expect(p(`
+				(int || string || null).notNull()
+			`))
+			.to.eql({
+				type: 'integer',
 			});
 		});
 	});

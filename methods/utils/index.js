@@ -1,5 +1,5 @@
 const t = require('@babel/types');
-const {getPropStringValue} = require('../../lib/object');
+const {getPropStringValue, getProp} = require('../../lib/object');
 const AdvSyntaxError = require('../../lib/AdvSyntaxError');
 const RuntimeError = require('../../lib/RuntimeError');
 
@@ -12,6 +12,7 @@ module.exports = {
 	isString,
 	isNumber,
 	isArray,
+	isEnum,
 	argType,
 	firstType,
 	firstObject,
@@ -59,6 +60,12 @@ function isNumber(schema) {
 function isArray(schema) {
 	if (getPropStringValue(schema, 'type') !== 'array') {
 		throw new RuntimeError(schema, `Method ${JSON.stringify(curMethodName)} allowed only for "array" schema`);
+	}
+}
+
+function isEnum(schema) {
+	if (!getProp(schema, 'anyOf') && !getProp(schema, 'allOf')) {
+		throw new RuntimeError(schema, `Method ${JSON.stringify(curMethodName)} allowed only for "enum" schema`);
 	}
 }
 
