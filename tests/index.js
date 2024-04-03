@@ -2127,9 +2127,10 @@ describe('errors', function () {
 	const RuntimeError = require('../lib/RuntimeError');
 
 	it('should throw babel syntax error', function () {
-		expect(() => parser(`{id: }`))
+		const code = `{id: }`;
+		expect(() => parser(code))
 		.to.throw(SyntaxError, 'Unexpected token')
-		.with.property('code', `({id: });`);
+		.with.property('code', code);
 	});
 
 	it('should throw adv syntax error', function () {
