@@ -45,8 +45,27 @@ function parseSchema(code, params) {
 	return generateAjvSchema(toAst(code), params);
 }
 
-function advAstToJsonSchemaAst(ast, params) {
-	const schema = astToAjvSchema(ast, params);
+/**
+ * Take AST from ADV code and return JSON Schema AST
+ *
+ * @param {import('./index').ADV_AST} ast
+ * @param {import('./index').Params} params
+ * @return {import('./index').JSONSchema}
+ */
+function advAstToJsonSchemaAst(ast, {
+	schemas = {...defaultSchemas},
+	methods = defaultMethods,
+	functions,
+	objectOptions = defaultObjectMethods,
+	schemaVersion = '07'
+} = {}) {
+	const schema = astToAjvSchema(ast, {
+		schemas,
+		methods,
+		functions,
+		objectOptions,
+		schemaVersion,
+	});
 
 	addDescription(ast, schema);
 	replaceObjectKeysWithString(schema);
@@ -62,20 +81,8 @@ function advAstToJsonSchemaAst(ast, params) {
  * @param {import('./index').Params} params
  * @return {import('./index').JSONSchema}
  */
-function generateAjvSchema(ast, {
-	schemas = {...defaultSchemas},
-	methods = defaultMethods,
-	functions,
-	objectOptions = defaultObjectMethods,
-	schemaVersion = '07'
-} = {}) {
-	const schema = advAstToJsonSchemaAst(ast, {
-		schemas,
-		methods,
-		functions,
-		objectOptions,
-		schemaVersion,
-	});
+function generateAjvSchema(ast, params) {
+	const schema = advAstToJsonSchemaAst(ast, params);
 
 	return ajvAstToJsonSchema(schema);
 }
