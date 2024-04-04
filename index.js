@@ -30,7 +30,7 @@ module.exports.parseAdvToAst = getAstSchema;
 module.exports.generateAjvSchema = generateAjvSchema;
 module.exports.advAstToJsonSchema = generateAjvSchema;
 module.exports.astToAjvSchema = astToAjvSchema;
-module.exports.advAstToJsonSchemaAst = astToAjvSchema;
+module.exports.advAstToJsonSchemaAst = advAstToJsonSchemaAst;
 module.exports.jsonSchemaAstToJsonSchema = ajvAstToJsonSchema;
 module.exports.jsonSchemaAstToJsonSchemaString = jsonSchemaAstToJsonSchemaString;
 
@@ -43,6 +43,16 @@ module.exports.jsonSchemaAstToJsonSchemaString = jsonSchemaAstToJsonSchemaString
  */
 function parseSchema(code, params) {
 	return generateAjvSchema(toAst(code), params);
+}
+
+function advAstToJsonSchemaAst(ast, params) {
+	const schema = astToAjvSchema(ast, params);
+
+	addDescription(ast, schema);
+	replaceObjectKeysWithString(schema);
+	replaceComments(schema);
+
+	return schema;
 }
 
 /**
@@ -59,17 +69,13 @@ function generateAjvSchema(ast, {
 	objectOptions = defaultObjectMethods,
 	schemaVersion = '07'
 } = {}) {
-	const schema = astToAjvSchema(ast, {
+	const schema = advAstToJsonSchemaAst(ast, {
 		schemas,
 		methods,
 		functions,
 		objectOptions,
 		schemaVersion,
 	});
-
-	addDescription(ast, schema);
-	replaceObjectKeysWithString(schema);
-	replaceComments(schema);
 
 	return ajvAstToJsonSchema(schema);
 }
