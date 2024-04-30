@@ -9,23 +9,25 @@ module.exports = function props(schema, args, {methodName = 'props'} = {}) {
 	isObject(schema);
 	atLeastOne(args, schema);
 
-	const map = {};
+	const errMessage = `Method ${JSON.stringify(methodName)} accept only strings, key/string objects or array of strings`;
 
-	for (const prop of args) {
+	const map = new Map();
+
+	for (const prop of flatten(args)) {
 		if (t.isStringLiteral(prop)) {
-			map[prop.value] = prop.value;
+			map.set(prop.value, prop.value);
 		}
 		else if (t.isObjectExpression(prop)) {
 			for (const item of prop.properties) {
 				if (!t.isStringLiteral(item.value)) {
-					throw new RuntimeError(item, `Method ${JSON.stringify(methodName)} accept only strings or key/string objects`);
+					throw new RuntimeError(item, errMessage);
 				}
 
-				map[item.key.name || item.key.value] = item.value.value;
+				map.set(item.key.name || item.key.value, item.value.value);
 			}
 		}
 		else {
-			throw new RuntimeError(schema, `Method ${JSON.stringify(methodName)} accept only strings or key/string objects`);
+			throw new RuntimeError(schema, errMessage);
 		}
 	}
 
@@ -45,9 +47,9 @@ module.exports = function props(schema, args, {methodName = 'props'} = {}) {
 		for (const prop of required.value.elements) {
 			const name = prop.value;
 
-			if (!map.hasOwnProperty(name)) continue;
+			if (!map.has(name)) continue;
 
-			props.push(t.stringLiteral(map[name]));
+			props.push(t.stringLiteral(map.get(name)));
 		}
 
 		replaceProp(schema, {
@@ -62,9 +64,9 @@ module.exports = function props(schema, args, {methodName = 'props'} = {}) {
 		for (let prop of properties.value.properties) {
 			const name = getPropName(prop);
 
-			if (!map.hasOwnProperty(name)) continue;
+			if (!map.has(name)) continue;
 
-			const alias = map[name];
+			const alias = map.get(name);
 
 			if (name !== alias) {
 				prop = {
@@ -84,3 +86,20 @@ module.exports = function props(schema, args, {methodName = 'props'} = {}) {
 
 	return schema;
 };
+
+function flatten(args) {
+	const arr = [];
+
+	for (const item of args) {
+		if (t.isArrayExpression(item)) {
+			for (const element of item.elements) {
+				arr.push(element);
+			}
+		}
+		else {
+			arr.push(item);
+		}
+	}
+
+	return arr;
+}

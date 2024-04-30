@@ -1676,6 +1676,37 @@ describe('methods', function () {
 				},
 			});
 
+			expect(p(`{id: number, [name]: string, age: number}.props(['id', 'name'])`)).to.eql({
+				type: 'object',
+				additionalProperties: false,
+				required: ['id'],
+				properties: {
+					id: {type: 'number'},
+					name: {type: 'string'},
+				},
+			});
+
+			expect(p(`{id: number, [name]: string, age: number}.props(['id'], 'age')`)).to.eql({
+				type: 'object',
+				additionalProperties: false,
+				required: ['id', 'age'],
+				properties: {
+					id: {type: 'number'},
+					age: {type: 'number'},
+				},
+			});
+
+			expect(p(`{id: number, [name]: string, age: number}.props([{'id': 'test'}, 'age'], 'name')`)).to.eql({
+				type: 'object',
+				additionalProperties: false,
+				required: ['test', 'age'],
+				properties: {
+					test: {type: 'number'},
+					age: {type: 'number'},
+					name: {type: 'string'},
+				},
+			});
+
 			p(`
 			# desc
 			User = {id: number, name: string}`);
