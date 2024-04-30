@@ -2118,6 +2118,12 @@ describe('methods', function () {
 			}
 		});
 	});
+
+	it('propItems', function () {
+		expect(p(`{test: [number], name: string}.propItems('test')`)).to.eql({
+			type: 'number'
+		});
+	});
 });
 
 describe('errors', function () {

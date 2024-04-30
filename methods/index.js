@@ -29,6 +29,7 @@ const unevaluatedItems = require('./array/unevaluatedItems');
 
 const prop = require('./object/prop');
 const props = require('./object/props');
+const propItems = require('./object/propItems');
 const pick = (schema, args, params = {}) => props(schema, args, {methodName: 'pick', ...params});
 const remove = require('./object/remove');
 const omit = (schema, args, params = {}) => remove(schema, args, {methodName: 'omit', ...params});
@@ -80,6 +81,7 @@ module.exports = {
 
 	prop,
 	props,
+	propItems,
 	pick,
 	remove,
 	omit,
