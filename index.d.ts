@@ -6,7 +6,7 @@ declare function parseSchema(code: Code, params?: Params): JSONSchema;
 export default parseSchema;
 
 export function generateAjvSchema(ast: ADV_AST, params?: Params): JSONSchema;
-export function getAstSchema(code: Code, params?: {schemas?: Schemas}): ADV_AST;
+export function getAstSchema(code: Code, params?: {schemas?: Schemas} & ToAstParams): ADV_AST;
 export function astToAjvSchema(ast: ADV_AST, params?: Params): JSONSchemaAST;
 export function jsonSchemaAstToJsonSchema(schema: JSONSchemaAST): JSONSchema;
 export function jsonSchemaAstToJsonSchemaString(schema: JSONSchemaAST): string;
