@@ -1,4 +1,5 @@
 import * as t from '@babel/types';
+import {ParserOptions} from '@babel/parser';
 
 declare function parseSchema(code: Code, params?: Params): JSONSchema;
 
@@ -18,13 +19,15 @@ export type Code = string|SchemaAsFunction;
 
 export type SchemaAsFunction = (Name?: any) => any;
 
-export interface Params {
+export type Params = {
     schemas?: Schemas,
     methods?: {[name: string]: Method},
     functions?: {[name: string]: (args: AST[], params?: Object) => AST},
     objectOptions?: {[name: string]: Method},
     schemaVersion?: "07" | "2019" | "2020"
-}
+} & ToAstParams;
+
+export type ToAstParams = Pick<ParserOptions, 'sourceFilename' | 'startLine' | 'startColumn'>;
 
 export type Schemas = {[name: string]: AST};
 

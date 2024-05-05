@@ -1,6 +1,7 @@
 // noinspection JSUnusedLocalSymbols
 
 const {expect} = require('chai');
+const parser = require("../index");
 
 describe('parseSchema', function () {
 	const originParser = require('../index');
@@ -2159,15 +2160,24 @@ describe('methods', function () {
 
 describe('errors', function () {
 	const parser = require('../index');
+	const toAst = require('../lib/toAst');
 	const AdvSyntaxError = require('../lib/AdvSyntaxError');
 	const AdvReferenceError = require('../lib/AdvReferenceError');
 	const RuntimeError = require('../lib/RuntimeError');
 
 	it('should throw babel syntax error', function () {
-		const code = `{id: }`;
-		expect(() => parser(code))
+		const code = `\n{\n\tid: \n}`;
+		expect(() => parser(code, {sourceFilename: '/some/test.js', startLine: 100, startColumn: 10}))
 		.to.throw(SyntaxError, 'Unexpected token')
-		.with.property('code', code);
+		.and.deep.include({
+			code: code,
+			loc: {
+				line: 103,
+				column: 0,
+				index: 9,
+			},
+			filename: '/some/test.js'
+		});
 	});
 
 	it('should throw adv syntax error', function () {

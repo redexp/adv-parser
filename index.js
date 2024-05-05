@@ -42,7 +42,7 @@ module.exports.jsonSchemaAstToJsonSchemaString = jsonSchemaAstToJsonSchemaString
  * @returns {import('./index').AjvSchema}
  */
 function parseSchema(code, params) {
-	return generateAjvSchema(toAst(code), params);
+	return generateAjvSchema(toAst(code, params), params);
 }
 
 /**
@@ -92,11 +92,12 @@ function generateAjvSchema(ast, params) {
  * Side effect - AST object of ADV schema will be added to `params.schemas`
  *
  * @param {import('./index').Code} code
- * @param {{schemas?: import('./index').Schemas}} params
+ * @param {{schemas?: import('./index').Schemas} & import('./index').ToAstParams} params
  * @return {import('./index').ADV_AST}
  */
-function getAstSchema(code, {schemas} = {}) {
-	const schema = toAst(code);
+function getAstSchema(code, params = {}) {
+	const schema = toAst(code, params);
+	const {schemas} = params;
 
 	if (!schemas) return schema;
 
@@ -722,6 +723,7 @@ function astOrWithRightShiftToAjvSchema(root, params) {
 	oneOf.properties[0].value.elements = ifs;
 	addProp(parentIfThen, 'else', oneOf);
 
+	// noinspection JSSuspiciousNameCombination
 	return topIfThen;
 }
 
